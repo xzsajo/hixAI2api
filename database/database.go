@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-const (
-	DBConnectionString = "MYSQL_DSN"
-)
-
 func ConfigDB(dsn string) (*gorm.DB, error) {
 	newLogger := gormlog.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
