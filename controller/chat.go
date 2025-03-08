@@ -281,6 +281,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 
 			isRateLimit := false
 			var assistantMsgContent string
+			thinkStartType := new(bool) // 初始值为false
 		SSELoop:
 			for response := range sseChan {
 				if response.Done {
@@ -306,7 +307,8 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 					//config.RemoveCookie(cookie)
 					break SSELoop // 使用 label 跳出 SSE 循环
 				}
-				delta, shouldContinue := processStreamData(c, data, responseId, openAIReq.Model, jsonData)
+
+				delta, shouldContinue := processStreamData(c, data, responseId, openAIReq.Model, jsonData, thinkStartType)
 				// 处理事件流数据
 
 				if !shouldContinue {
@@ -382,7 +384,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 }
 
 // 处理流式数据的辅助函数，返回bool表示是否继续处理
-func processStreamData(c *gin.Context, data string, responseId, model string, jsonData []byte) (string, bool) {
+func processStreamData(c *gin.Context, data string, responseId, model string, jsonData []byte, thinkStartType *bool) (string, bool) {
 	data = strings.TrimSpace(data)
 	data = strings.TrimPrefix(data, "data: ")
 
@@ -391,7 +393,9 @@ func processStreamData(c *gin.Context, data string, responseId, model string, js
 		return "", false
 	}
 
-	if !strings.HasPrefix(data, "{\"content\":") && !strings.HasPrefix(data, "{\"reasoning_content\":") {
+	if !strings.HasPrefix(data, "{\"content\":") &&
+		!strings.HasPrefix(data, "{\"reasoning_content\":") &&
+		!strings.HasPrefix(data, "{\"thinking_time\":") {
 		return "", true
 	}
 
@@ -404,7 +408,30 @@ func processStreamData(c *gin.Context, data string, responseId, model string, js
 	delta, ok := event["content"].(string)
 	if ok {
 		if err := handleDelta(c, delta, responseId, model, jsonData); err != nil {
-			logger.Errorf(c.Request.Context(), "handleMessageFieldDelta err: %v", err)
+			logger.Errorf(c.Request.Context(), "handleDelta err: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return "", false
+		}
+		return delta, true
+	}
+	delta, ok = event["reasoning_content"].(string)
+	if ok {
+		if !*thinkStartType {
+			delta = "<think>\n" + delta
+			*thinkStartType = true
+		}
+		if err := handleDelta(c, delta, responseId, model, jsonData); err != nil {
+			logger.Errorf(c.Request.Context(), "handleDelta err: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return "", false
+		}
+		return delta, true
+	}
+	_, ok = event["thinking_time"].(float64)
+	if ok {
+		delta = "\n</think>"
+		if err := handleDelta(c, delta, responseId, model, jsonData); err != nil {
+			logger.Errorf(c.Request.Context(), "handleDelta err: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return "", false
 		}
