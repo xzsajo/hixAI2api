@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  hixai2api:
+    image: deanxv/hixai2api:latest
+    container_name: hixai2api
+    restart: always
+    ports:
+      - "7044:7044"
+    volumes:
+      - ./data:/app/hixai2api/data
+    environment:
+      - TZ=Asia/Shanghai
