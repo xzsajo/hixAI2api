@@ -24,16 +24,6 @@ const (
 	responseIDFormat  = "chatcmpl-%s"
 )
 
-type OpenAIChatMessage struct {
-	Role    string      `json:"role"`
-	Content interface{} `json:"content"`
-}
-
-type OpenAIChatCompletionRequest struct {
-	Messages []OpenAIChatMessage
-	Model    string
-}
-
 // ChatForOpenAI 处理OpenAI聊天请求
 func ChatForOpenAI(c *gin.Context) {
 	client := cycletls.Init()
@@ -54,11 +44,224 @@ func ChatForOpenAI(c *gin.Context) {
 
 	if openAIReq.Stream {
 		handleStreamRequest(c, client, openAIReq)
+	} else {
+		handleNonStreamRequest(c, client, openAIReq)
 	}
-	//else {
-	//	handleNonStreamRequest(c, client, openAIReq)
-	//}
+}
 
+func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq model.OpenAIChatCompletionRequest) {
+	var err error
+
+	var cookies []model.Cookie
+	modelInfo, ok := common.GetHixModelInfo(openAIReq.Model)
+	// 1. 先获取该模型的Credit
+	if ok {
+		// 2. 从token表中获取该credit大于该模型的token值
+		cookieRecord := &model.Cookie{
+			Credit: modelInfo.Credit,
+		}
+		cookies, err = cookieRecord.FindByMinimumCredit(database.DB, modelInfo.Credit)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "no token"})
+			return
+		}
+		if len(cookies) == 0 {
+			c.JSON(500, gin.H{"error": errNoValidCookies})
+			return
+		}
+	} else {
+		c.JSON(500, gin.H{"error": "no model"})
+		return
+	}
+
+	newChatFlag := false
+	var hixChatId string
+	// 1. 获取符合messagehash的tokens
+	pair, b, err := openAIReq.GetPreviousMessagePair()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	if !b {
+		// 没有last问答对 视为新会话
+		newChatFlag = true
+	} else {
+		msgPairSha256 := common.StringToSHA256(strings.TrimSpace(pair))
+		cookie, chatId, err := model.QueryCookiesByChatHashAndModelAndCredit(database.DB, msgPairSha256, openAIReq.Model, modelInfo.Credit)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			newChatFlag = true
+		} else if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		} else {
+			cookies = []model.Cookie{
+				{
+					Cookie: cookie,
+				},
+			}
+			hixChatId = chatId
+		}
+	}
+
+	responseId := fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405"))
+	ctx := c.Request.Context()
+
+	maxRetries := len(cookies)
+
+	var messagesPair []model.OpenAIChatMessage
+	messagesPair = append(messagesPair, openAIReq.Messages[len(openAIReq.Messages)-1])
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		cookie := cookies[attempt]
+		if newChatFlag {
+			chatId, err := hixapi.MakeCreateChatRequest(client, cookie.Cookie, modelInfo.ModelID)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+			hixChatId = chatId
+		}
+
+		requestBody, err := createRequestBody(c, hixChatId, &openAIReq)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		jsonData, err := json.Marshal(requestBody)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to marshal request body"})
+			return
+		}
+		sseChan, err := hixapi.MakeStreamChatRequest(c, client, jsonData, cookie.Cookie)
+		if err != nil {
+			logger.Errorf(ctx, "MakeStreamChatRequest err on attempt %d: %v", attempt+1, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		isRateLimit := false
+		var assistantMsgContent string
+		var delta string
+		var shouldContinue bool
+		thinkStartType := new(bool) // 初始值为false
+		for response := range sseChan {
+			if response.Done {
+				logger.Warnf(ctx, response.Data)
+				return
+			}
+
+			data := response.Data
+			if data == "" {
+				continue
+			}
+
+			logger.Debug(ctx, strings.TrimSpace(data))
+
+			switch {
+			case common.IsCloudflareChallenge(data):
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "cf challenge"})
+				return
+			case common.IsNotLogin(data):
+				isRateLimit = true
+				logger.Warnf(ctx, "Cookie Not Login, switching to next cookie, attempt %d/%d, COOKIE:%s", attempt+1, maxRetries, cookie)
+				// 删除cookie
+				//config.RemoveCookie(cookie)
+				break
+			}
+
+			streamDelta, streamShouldContinue := processNoStreamData(c, data, responseId, openAIReq.Model, jsonData, thinkStartType)
+			delta = streamDelta
+			shouldContinue = streamShouldContinue
+			// 处理事件流数据
+			if !shouldContinue {
+				// 保存chat记录
+				messagesPair = append(messagesPair, model.OpenAIChatMessage{
+					Role:    "assistant",
+					Content: strings.TrimSpace(assistantMsgContent),
+				})
+				bytes, err := json.Marshal(messagesPair)
+				if err != nil {
+					c.JSON(500, gin.H{"error": err.Error()})
+					return
+				}
+				messagesPairStr := strings.NewReplacer(
+					`\n`, "",
+					`\t`, "",
+					`\r`, "",
+				).Replace(string(bytes))
+
+				chat := model.Chat{
+					Cookie:                     cookie.Cookie,
+					Model:                      openAIReq.Model,
+					CookieHash:                 cookie.CookieHash,
+					HixChatId:                  hixChatId,
+					LastMessagesPair:           string(bytes),
+					LastMessagesPairSha256Hash: common.StringToSHA256(messagesPairStr),
+				}
+				if newChatFlag {
+					if err := chat.Create(database.DB); err != nil {
+						c.JSON(500, gin.H{"error": err.Error()})
+					}
+				} else {
+					// 更新chat记录
+					if err := chat.UpdateLastMessages(database.DB); err != nil {
+						c.JSON(500, gin.H{"error": err.Error()})
+					}
+				}
+				promptTokens := model.CountTokenText(string(jsonData), openAIReq.Model)
+				completionTokens := model.CountTokenText(assistantMsgContent, openAIReq.Model)
+				finishReason := "stop"
+
+				c.JSON(http.StatusOK, model.OpenAIChatCompletionResponse{
+					ID:      fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405")),
+					Object:  "chat.completion",
+					Created: time.Now().Unix(),
+					Model:   openAIReq.Model,
+					Choices: []model.OpenAIChoice{{
+						Message: model.OpenAIMessage{
+							Role:    "assistant",
+							Content: assistantMsgContent,
+						},
+						FinishReason: &finishReason,
+					}},
+					Usage: model.OpenAIUsage{
+						PromptTokens:     promptTokens,
+						CompletionTokens: completionTokens,
+						TotalTokens:      promptTokens + completionTokens,
+					},
+				})
+
+				go func() {
+					credit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
+					if err != nil {
+						logger.Errorf(ctx, "MakeSubUsageRequest err: %v", err)
+					}
+					cookieRecord := &model.Cookie{
+						CookieHash: cookie.CookieHash,
+						Credit:     credit,
+					}
+					err = cookieRecord.UpdateCreditByCookieHash(database.DB, cookie.CookieHash, credit)
+					if err != nil {
+						logger.Errorf(ctx, "UpdateCreditByCookieHash err: %v", err)
+					}
+				}()
+				return
+			} else {
+				//if strings.TrimSpace(delta) != "" {
+				assistantMsgContent = assistantMsgContent + delta
+
+				//}
+			}
+
+		}
+		if !isRateLimit {
+			return
+		}
+
+	}
+	logger.Errorf(ctx, "All cookies exhausted after %d attempts", maxRetries)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "All cookies are temporarily unavailable."})
+	return
 }
 
 func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest) (map[string]interface{}, error) {
@@ -124,38 +327,7 @@ func handleDelta(c *gin.Context, delta string, responseId, modelName string, jso
 		return err
 	}
 
-	//// 处理思考过程标记
-	//if config.ReasoningHide != 1 {
-	//	switch fieldName {
-	//	case "session_state.answerthink_is_started":
-	//		err = sendSSEvent(c, createResponse("<think>\n"))
-	//	case "session_state.answerthink_is_finished":
-	//		err = sendSSEvent(c, createResponse("\n</think>"))
-	//	}
-	//}
-
 	return err
-}
-
-type Content struct {
-	DetailAnswer string `json:"detailAnswer"`
-}
-
-// 然后这样解析
-func getDetailAnswer(eventMap map[string]interface{}) (string, error) {
-	// 获取 content 字段的值
-	contentStr, ok := eventMap["content"].(string)
-	if !ok {
-		return "", fmt.Errorf("content is not a string")
-	}
-
-	// 解析内层的 JSON
-	var content Content
-	if err := json.Unmarshal([]byte(contentStr), &content); err != nil {
-		return "", err
-	}
-
-	return content.DetailAnswer, nil
 }
 
 // handleMessageResult 处理消息结果
@@ -221,8 +393,6 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	//[{"role":"user","content":"111 --- 333"},{"role":"assistant","content":"It seems like you've entered \"111 --- 333.\" Could you clarify what you're looking for or provide more context? Are you asking for a comparison, a calculation, or something else? Let me know so I can assist you better!"}]
-	//[{"role":"user","content":"111 --- 333"},{"role":"assistant","content":"It seems like you've entered \"111 ---333.\" Could you clarify what you're looking for or provide more context? Are you asking for a comparison, a calculation, or something else? Let me know so I can assist you better!"}]
 	if !b {
 		// 没有last问答对 视为新会话
 		newChatFlag = true
@@ -235,9 +405,11 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		} else {
-			cookies = append(cookies, model.Cookie{
-				Cookie: cookie,
-			})
+			cookies = []model.Cookie{
+				{
+					Cookie: cookie,
+				},
+			}
 			hixChatId = chatId
 		}
 	}
@@ -368,7 +540,6 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 					assistantMsgContent = assistantMsgContent + delta
 					//}
 				}
-
 			}
 
 			if !isRateLimit {
@@ -435,6 +606,48 @@ func processStreamData(c *gin.Context, data string, responseId, model string, js
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return "", false
 		}
+		return delta, true
+	}
+
+	return "", true
+
+}
+
+func processNoStreamData(c *gin.Context, data string, responseId, model string, jsonData []byte, thinkStartType *bool) (string, bool) {
+	data = strings.TrimSpace(data)
+	data = strings.TrimPrefix(data, "data: ")
+
+	if data == "[DONE]" {
+		return "", false
+	}
+
+	if !strings.HasPrefix(data, "{\"content\":") &&
+		!strings.HasPrefix(data, "{\"reasoning_content\":") &&
+		!strings.HasPrefix(data, "{\"thinking_time\":") {
+		return "", true
+	}
+
+	var event map[string]interface{}
+	if err := json.Unmarshal([]byte(data), &event); err != nil {
+		logger.Errorf(c.Request.Context(), "Failed to unmarshal event: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return "", false
+	}
+	delta, ok := event["content"].(string)
+	if ok {
+		return delta, true
+	}
+	delta, ok = event["reasoning_content"].(string)
+	if ok {
+		if !*thinkStartType {
+			delta = "<think>\n" + delta
+			*thinkStartType = true
+		}
+		return delta, true
+	}
+	_, ok = event["thinking_time"].(float64)
+	if ok {
+		delta = "\n</think>"
 		return delta, true
 	}
 

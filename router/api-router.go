@@ -11,18 +11,27 @@ import (
 
 func SetApiRouter(router *gin.Engine) {
 	router.Use(middleware.CORS())
-	//router.Use(gzip.Gzip(gzip.DefaultCompression))
 	router.Use(middleware.IPBlacklistMiddleware())
 	router.Use(middleware.RequestRateLimit())
 
-	router.GET("/")
-
-	//https://api.openai.com/v1/images/generations
 	v1Router := router.Group(fmt.Sprintf("%s/v1", ProcessPath(config.RoutePrefix)))
 	v1Router.Use(middleware.OpenAIAuth())
 	v1Router.POST("/chat/completions", controller.ChatForOpenAI)
 	//v1Router.POST("/images/generations", controller.ImagesForOpenAI)
 	v1Router.GET("/models", controller.OpenaiModels)
+
+	apiRouter := router.Group(fmt.Sprintf("/api"))
+	apiRouter.Use(middleware.BackendAuth())
+	//apiRouter.POST("/auth/verify", controller.AuthVerify)
+	apiRouter.PUT("/key", controller.SaveApiKey)
+	apiRouter.DELETE("/key/:id", controller.DeleteApiKey)
+	apiRouter.POST("/key/update", controller.UpdateApiKey)
+	apiRouter.GET("/key/all", controller.GetAllApiKey)
+
+	//apiRouter.PUT("/cookie", controller.saveCookie)
+	//apiRouter.DELETE("/cookie/:id", controller.deleteCookie)
+	//apiRouter.POST("/cookie/update", controller.createCookie)
+	//apiRouter.GET("/cookie/all", controller.getAllCookie)
 }
 
 func ProcessPath(path string) string {

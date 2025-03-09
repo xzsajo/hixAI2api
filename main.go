@@ -16,6 +16,8 @@ import (
 	"strconv"
 )
 
+//var buildFS embed.FS
+
 func main() {
 	logger.SetupLogger()
 	logger.SysLog(fmt.Sprintf("hixai2api %s starting...", common.Version))
@@ -36,6 +38,8 @@ func main() {
 	middleware.SetUpLogger(server)
 
 	router.SetRouter(server)
+	//router.SetRouter(server, buildFS)
+
 	var port = os.Getenv("PORT")
 	if port == "" {
 		port = strconv.Itoa(*common.Port)

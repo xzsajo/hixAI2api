@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-var ApiSecret = os.Getenv("API_SECRET")
-var ApiSecrets = strings.Split(os.Getenv("API_SECRET"), ",")
+var BackendSecret = os.Getenv("BACKEND_SECRET")
 
 var MysqlDsn = os.Getenv("MYSQL_DSN")
 
