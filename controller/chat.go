@@ -240,7 +240,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 						CookieHash: cookie.CookieHash,
 						Credit:     credit,
 					}
-					err = cookieRecord.UpdateCreditByCookieHash(database.DB, cookie.CookieHash, credit)
+					err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 					if err != nil {
 						logger.Errorf(ctx, "UpdateCreditByCookieHash err: %v", err)
 					}
@@ -528,7 +528,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 							CookieHash: cookie.CookieHash,
 							Credit:     credit,
 						}
-						err = cookieRecord.UpdateCreditByCookieHash(database.DB, cookie.CookieHash, credit)
+						err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 						if err != nil {
 							logger.Errorf(ctx, "UpdateCreditByCookieHash err: %v", err)
 						}

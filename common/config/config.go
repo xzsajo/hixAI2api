@@ -25,7 +25,7 @@ var PRE_MESSAGES_JSON = env.String("PRE_MESSAGES_JSON", "")
 // 路由前缀
 var RoutePrefix = env.String("ROUTE_PREFIX", "")
 var SwaggerEnable = os.Getenv("SWAGGER_ENABLE")
-var OnlyOpenaiApi = os.Getenv("ONLY_OPENAI_API")
+var BackendApiEnable = env.Int("BACKEND_API_ENABLE", 1)
 
 var DebugEnabled = os.Getenv("DEBUG") == "true"
 

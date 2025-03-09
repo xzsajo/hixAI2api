@@ -31,18 +31,13 @@ func SaveApiKey(c *gin.Context) {
 	var req model.ApiKeySaveReq
 	if err := c.BindJSON(&req); err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		c.JSON(http.StatusInternalServerError, model.OpenAIErrorResponse{
-			OpenAIError: model.OpenAIError{
-				Message: "Invalid request parameters",
-				Type:    "request_error",
-				Code:    "500",
-			},
-		})
+		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
 		return
 	}
 
 	apiKey := model.ApiKey{
 		ApiKey: req.ApiKey,
+		Remark: req.Remark,
 	}
 
 	exist, err := apiKey.Exist(database.DB)
@@ -90,13 +85,7 @@ func UpdateApiKey(c *gin.Context) {
 	var req model.ApiKeyUpdateReq
 	if err := c.BindJSON(&req); err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		c.JSON(http.StatusInternalServerError, model.OpenAIErrorResponse{
-			OpenAIError: model.OpenAIError{
-				Message: "Invalid request parameters",
-				Type:    "request_error",
-				Code:    "500",
-			},
-		})
+		common.SendResponse(c, http.StatusBadRequest, 0, err.Error(), "")
 		return
 	}
 
@@ -108,6 +97,7 @@ func UpdateApiKey(c *gin.Context) {
 	apiKey := model.ApiKey{
 		Id:     req.Id,
 		ApiKey: req.ApiKey,
+		Remark: req.Remark,
 	}
 
 	exist, err := apiKey.ExistsNotMe(database.DB)

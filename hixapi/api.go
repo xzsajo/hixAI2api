@@ -143,9 +143,9 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
+	bodyBytes := []byte(response.Body)
 	var responses []SubUsageResponse
-	err = json.Unmarshal([]byte(response.Body), &responses)
+	err = json.Unmarshal(bodyBytes, &responses)
 	if err != nil {
 		return 0, err
 	}
@@ -157,12 +157,12 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
 			useCount := responses[0].Result.Data.JSON.UsageList[0].UseCount
 			return totalCount - useCount, nil
 		} else {
-			return 0, fmt.Errorf("MakeSubUsageRequest err")
+			return 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
 
 		}
 
 	} else {
-		return 0, fmt.Errorf("MakeSubUsageRequest err")
+		return 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
 	}
 }
 

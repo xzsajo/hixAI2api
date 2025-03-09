@@ -24,13 +24,13 @@ func UpdateCookieCreditTask() {
 				defer safeClose(client)
 				credit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
 				if err != nil {
-					logger.SysError(fmt.Sprintf("MakeSubUsageRequest err: %v", err))
+					logger.SysError(fmt.Sprintf("UpdateCookieCreditTask err: %v", err))
 				}
 				cookieRecord := &model.Cookie{
 					CookieHash: cookie.CookieHash,
 					Credit:     credit,
 				}
-				err = cookieRecord.UpdateCreditByCookieHash(database.DB, cookie.CookieHash, credit)
+				err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 				if err != nil {
 					logger.SysError(fmt.Sprintf("UpdateCreditByCookieHash err: %v cookie: %s", err, cookie.Cookie))
 				}

@@ -9,6 +9,7 @@ import (
 type ApiKey struct {
 	Id         string    `json:"id" gorm:"type:varchar(64);not null;primaryKey"`
 	ApiKey     string    `json:"apiKey" gorm:"type:varchar(255);not null;index"`
+	Remark     string    `json:"remark" gorm:"type:varchar(900)"`
 	CreateTime time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 
@@ -65,7 +66,8 @@ func (c *ApiKey) DeleteById(db *gorm.DB) error {
 }
 
 func (c *ApiKey) UpdateKeyById(db *gorm.DB) error {
-	result := db.Model(&ApiKey{}).Where("id = ?", c.Id).Update("api_key", c.ApiKey)
+	result := db.Model(&ApiKey{}).Where("id = ?", c.Id).
+		Update("api_key", c.ApiKey).Update("remark", c.Remark)
 	if result.Error != nil {
 		return result.Error
 	}

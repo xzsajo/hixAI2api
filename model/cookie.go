@@ -11,6 +11,7 @@ type Cookie struct {
 	Cookie     string    `json:"cookie" gorm:"type:text"`
 	CookieHash string    `json:"cookie_hash" gorm:"type:varchar(255);not null;index"`
 	Credit     int       `json:"credit" gorm:"type:bigint(20);not null"`
+	Remark     string    `json:"remark" gorm:"type:varchar(900)"`
 	CreateTime time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 
@@ -31,7 +32,7 @@ func (c *Cookie) Create(db *gorm.DB) error {
 	return nil
 }
 
-func (t *Cookie) FindAllCookies(db *gorm.DB) ([]Cookie, error) {
+func (c *Cookie) FindAllCookies(db *gorm.DB) ([]Cookie, error) {
 	var cookies []Cookie
 	result := db.Find(&cookies)
 	if result.Error != nil {
@@ -40,7 +41,7 @@ func (t *Cookie) FindAllCookies(db *gorm.DB) ([]Cookie, error) {
 	return cookies, nil
 }
 
-func (t *Cookie) FindByMinimumCredit(db *gorm.DB, minCredit int) ([]Cookie, error) {
+func (c *Cookie) FindByMinimumCredit(db *gorm.DB, minCredit int) ([]Cookie, error) {
 	var cookies []Cookie
 	result := db.Where("credit >= ?", minCredit).Find(&cookies)
 	if result.Error != nil {
@@ -73,9 +74,9 @@ func QueryCookiesByChatHashAndModelAndCredit(db *gorm.DB, lastMessagesPairSha256
 	return result.Cookie, result.HixChatId, nil
 }
 
-func (c *Cookie) UpdateCreditByCookieHash(db *gorm.DB, cookieHash string, newCredit int) error {
+func (c *Cookie) UpdateCreditByCookieHash(db *gorm.DB) error {
 	// 使用 GORM 的 Model 方法指定模型，并使用 Where 方法指定条件
-	result := db.Model(&Cookie{}).Where("cookie_hash = ?", cookieHash).Update("credit", newCredit)
+	result := db.Model(&Cookie{}).Where("cookie_hash = ?", c.CookieHash).Update("credit", c.Credit)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -86,4 +87,50 @@ func (c *Cookie) UpdateCreditByCookieHash(db *gorm.DB, cookieHash string, newCre
 	//}
 
 	return nil
+}
+
+func (c *Cookie) Exist(db *gorm.DB) (bool, error) {
+	var count int64
+	result := db.Model(&Cookie{}).Where("`cookie` = ? ", c.Cookie).Count(&count)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return count > 0, nil
+}
+
+func (c *Cookie) ExistsNotMe(db *gorm.DB) (bool, error) {
+	var count int64
+	result := db.Model(&Cookie{}).Where("cookie = ? and id != ?", c.Cookie, c.Id).Count(&count)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return count > 0, nil
+}
+
+func (c *Cookie) DeleteById(db *gorm.DB) error {
+	result := db.Delete(&Cookie{}, c.Id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (c *Cookie) UpdateKeyById(db *gorm.DB) error {
+	result := db.Model(&Cookie{}).Where("id = ?", c.Id).
+		Update("cookie", c.Cookie).
+		Update("cookie_hash", c.CookieHash).
+		Update("remark", c.Remark)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (c *Cookie) GetAll(db *gorm.DB) ([]Cookie, error) {
+	var cookies []Cookie
+	result := db.Find(&cookies)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return cookies, nil
 }

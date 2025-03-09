@@ -20,18 +20,22 @@ func SetApiRouter(router *gin.Engine) {
 	//v1Router.POST("/images/generations", controller.ImagesForOpenAI)
 	v1Router.GET("/models", controller.OpenaiModels)
 
-	apiRouter := router.Group(fmt.Sprintf("/api"))
-	apiRouter.Use(middleware.BackendAuth())
-	//apiRouter.POST("/auth/verify", controller.AuthVerify)
-	apiRouter.PUT("/key", controller.SaveApiKey)
-	apiRouter.DELETE("/key/:id", controller.DeleteApiKey)
-	apiRouter.POST("/key/update", controller.UpdateApiKey)
-	apiRouter.GET("/key/all", controller.GetAllApiKey)
+	if config.BackendApiEnable == 1 {
+		apiRouter := router.Group(fmt.Sprintf("/api"))
+		apiRouter.Use(middleware.BackendAuth())
+		//apiRouter.POST("/auth/verify", controller.AuthVerify)
+		apiRouter.PUT("/key", controller.SaveApiKey)
+		apiRouter.DELETE("/key/:id", controller.DeleteApiKey)
+		apiRouter.POST("/key/update", controller.UpdateApiKey)
+		apiRouter.GET("/key/all", controller.GetAllApiKey)
 
-	//apiRouter.PUT("/cookie", controller.saveCookie)
-	//apiRouter.DELETE("/cookie/:id", controller.deleteCookie)
-	//apiRouter.POST("/cookie/update", controller.createCookie)
-	//apiRouter.GET("/cookie/all", controller.getAllCookie)
+		apiRouter.PUT("/cookie", controller.SaveCookie)
+		apiRouter.DELETE("/cookie/:id", controller.DeleteCookie)
+		apiRouter.POST("/cookie/update", controller.UpdateCookie)
+		apiRouter.GET("/cookie/all", controller.GetAllCookie)
+		apiRouter.POST("/cookie/credit/refresh", controller.RefreshCookieCredit)
+	}
+
 }
 
 func ProcessPath(path string) string {
