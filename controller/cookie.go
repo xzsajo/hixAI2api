@@ -11,8 +11,17 @@ import (
 	"hixai2api/model"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
+// SaveCookie @Summary 保存COOKIE
+// @Description 保存COOKIE
+// @Tags COOKIE
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Param req body model.CookieSaveReq true "COOKIE信息"
+// @Router /api/cookie [put]
 func SaveCookie(c *gin.Context) {
 
 	var req model.CookieSaveReq
@@ -27,6 +36,11 @@ func SaveCookie(c *gin.Context) {
 		})
 		return
 	}
+
+	if !strings.Contains(req.Cookie, "__Secure-next-auth.session-token=") {
+		req.Cookie = "__Secure-next-auth.session-token=" + req.Cookie
+	}
+
 	var err error
 	req.Cookie, err = url.QueryUnescape(req.Cookie)
 	if err != nil {
@@ -43,11 +57,11 @@ func SaveCookie(c *gin.Context) {
 	exist, err := cookie.Exist(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	if exist {
-		common.SendResponse(c, http.StatusBadRequest, 0, "COOKIE already exists", "")
+		common.SendResponse(c, http.StatusBadRequest, 1, "COOKIE already exists", "")
 		return
 	}
 
@@ -58,7 +72,7 @@ func SaveCookie(c *gin.Context) {
 	credit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	cookie.Credit = credit
@@ -66,17 +80,25 @@ func SaveCookie(c *gin.Context) {
 	err = cookie.Create(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	common.SendResponse(c, http.StatusOK, 0, "success", "")
 	return
 }
 
+// DeleteCookie @Summary 删除COOKIE
+// @Description 删除COOKIE
+// @Tags COOKIE
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Param id path string true "COOKIE ID"
+// @Router /api/cookie/{id} [delete]
 func DeleteCookie(c *gin.Context) {
 	id := c.Param("id") // 获取 URL 中的 id 参数
 	if id == "" {
-		common.SendResponse(c, http.StatusBadRequest, 0, "Invalid ID", "")
+		common.SendResponse(c, http.StatusBadRequest, 1, "Invalid ID", "")
 		return
 	}
 
@@ -86,23 +108,31 @@ func DeleteCookie(c *gin.Context) {
 	err := cookie.DeleteById(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	common.SendResponse(c, http.StatusOK, 0, "success", "")
 	return
 }
 
+// UpdateCookie @Summary 更新COOKIE
+// @Description 更新COOKIE
+// @Tags COOKIE
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Param req body model.CookieUpdateReq true "COOKIE信息"
+// @Router /api/cookie/update [post]
 func UpdateCookie(c *gin.Context) {
 	var req model.CookieUpdateReq
 	if err := c.BindJSON(&req); err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusBadRequest, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusBadRequest, 1, err.Error(), "")
 		return
 	}
 
 	if req.Id == "" {
-		common.SendResponse(c, http.StatusBadRequest, 0, "Invalid ID", "")
+		common.SendResponse(c, http.StatusBadRequest, 1, "Invalid ID", "")
 		return
 	}
 	var err error
@@ -122,11 +152,11 @@ func UpdateCookie(c *gin.Context) {
 	exist, err := cookie.ExistsNotMe(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	if exist {
-		common.SendResponse(c, http.StatusBadRequest, 0, "COOKIE already exists", "")
+		common.SendResponse(c, http.StatusBadRequest, 1, "COOKIE already exists", "")
 		return
 	}
 
@@ -136,7 +166,7 @@ func UpdateCookie(c *gin.Context) {
 	credit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	cookie.Credit = credit
@@ -144,13 +174,21 @@ func UpdateCookie(c *gin.Context) {
 	err = cookie.UpdateKeyById(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	common.SendResponse(c, http.StatusOK, 0, "success", "")
 	return
 }
 
+// GetAllCookie @Summary 查询全量COOKIE
+// @Description 查询全量COOKIE
+// @Tags COOKIE
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Success 200 {object} common.ResponseResult{data=[]model.CookieResp} "成功"
+// @Router /api/cookie/all [get]
 func GetAllCookie(c *gin.Context) {
 	var resp []model.CookieResp
 
@@ -158,7 +196,7 @@ func GetAllCookie(c *gin.Context) {
 	cookies, err := cookie.GetAll(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	if len(cookies) > 0 {
@@ -176,13 +214,20 @@ func GetAllCookie(c *gin.Context) {
 	return
 }
 
+// RefreshCookieCredit @Summary 同步更新全量COOKIE额度
+// @Description 同步更新全量COOKIE额度
+// @Tags COOKIE
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Router /api/cookie/credit/refresh [post]
 func RefreshCookieCredit(c *gin.Context) {
 
 	cookie := model.Cookie{}
 	cookies, err := cookie.GetAll(database.DB)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusInternalServerError, 0, err.Error(), "")
+		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 

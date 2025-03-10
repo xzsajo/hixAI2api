@@ -1,3 +1,7 @@
+// @title HIX-AI-2API
+// @version 1.0.0
+// @description HIX-AI-2API
+// @BasePath
 package main
 
 import (

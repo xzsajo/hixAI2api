@@ -9,7 +9,6 @@ type OpenAIChatCompletionRequest struct {
 	Model    string              `json:"model"`
 	Stream   bool                `json:"stream"`
 	Messages []OpenAIChatMessage `json:"messages"`
-	OpenAIChatCompletionExtraRequest
 }
 
 type OpenAIChatCompletionExtraRequest struct {

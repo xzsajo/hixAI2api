@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 const (
@@ -24,7 +25,14 @@ const (
 	responseIDFormat  = "chatcmpl-%s"
 )
 
-// ChatForOpenAI 处理OpenAI聊天请求
+// ChatForOpenAI @Summary OpenAI对话接口
+// @Description OpenAI对话接口
+// @Tags OpenAI
+// @Accept json
+// @Produce json
+// @Param req body model.OpenAIChatCompletionRequest true "OpenAI对话请求"
+// @Param Authorization header string true "Authorization API-KEY"
+// @Router /v1/chat/completions [post]
 func ChatForOpenAI(c *gin.Context) {
 	client := cycletls.Init()
 	defer safeClose(client)
@@ -53,6 +61,11 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	var err error
 
 	var cookies []model.Cookie
+	searchType := false
+	if strings.HasSuffix(openAIReq.Model, "-search") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-search", "", 1)
+		searchType = true
+	}
 	modelInfo, ok := common.GetHixModelInfo(openAIReq.Model)
 	// 1. 先获取该模型的Credit
 	if ok {
@@ -121,7 +134,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 			hixChatId = chatId
 		}
 
-		requestBody, err := createRequestBody(c, hixChatId, &openAIReq)
+		requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -264,7 +277,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	return
 }
 
-func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest) (map[string]interface{}, error) {
+func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType bool) (map[string]interface{}, error) {
 	if config.PRE_MESSAGES_JSON != "" {
 		err := openAIReq.PrependMessagesFromJSON(config.PRE_MESSAGES_JSON)
 		if err != nil {
@@ -272,12 +285,28 @@ func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAICha
 		}
 	}
 	openAIReq.FilterUserMessage()
-	// 创建请求体
+	var question string
+	switch content := openAIReq.Messages[0].Content.(type) {
+	case string:
+		runeCountInString := utf8.RuneCountInString(content)
+		if runeCountInString > 8000 {
+			return nil, fmt.Errorf("input text too long: %d", runeCountInString)
+		}
+		question = content
+	default:
+		return nil, fmt.Errorf("Invalid message content type: %T", content)
+	}
 	requestBody := map[string]interface{}{
 		"chatId":   chatId,
 		"fileUrl":  "",
-		"question": openAIReq.Messages[0].Content,
+		"question": question,
 	}
+	if searchType {
+		requestBody["search"] = true
+		requestBody["searchType"] = "internet"
+	}
+
+	// 创建请求体
 
 	logger.Debug(c.Request.Context(), fmt.Sprintf("RequestBody: %v", requestBody))
 
@@ -364,6 +393,12 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	var cookies []model.Cookie
+	searchType := false
+	if strings.HasSuffix(openAIReq.Model, "-search") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-search", "", 1)
+		searchType = true
+
+	}
 	modelInfo, ok := common.GetHixModelInfo(openAIReq.Model)
 	// 1. 先获取该模型的Credit
 	if ok {
@@ -433,7 +468,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 				hixChatId = chatId
 			}
 
-			requestBody, err := createRequestBody(c, hixChatId, &openAIReq)
+			requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return false
@@ -653,17 +688,6 @@ func processNoStreamData(c *gin.Context, data string, responseId, model string, 
 
 	return "", true
 
-}
-
-// 定义匹配JSON结构的结构体
-type Response struct {
-	Result struct {
-		Data struct {
-			JSON struct {
-				ID string `json:"id"`
-			} `json:"json"`
-		} `json:"data"`
-	} `json:"result"`
 }
 
 func OpenaiModels(c *gin.Context) {

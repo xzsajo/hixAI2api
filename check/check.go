@@ -11,7 +11,8 @@ func CheckEnvVariable() {
 	if config.MysqlDsn == "" {
 		logger.FatalLog("环境变量 MYSQL_DSN 未设置")
 	}
-	if config.BackendSecret == "" {
+
+	if config.BackendApiEnable == 1 && config.BackendSecret == "" {
 		logger.FatalLog("环境变量 BACKEND_SECRET 未设置")
 	}
 

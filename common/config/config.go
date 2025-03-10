@@ -8,12 +8,8 @@ import (
 )
 
 var BackendSecret = os.Getenv("BACKEND_SECRET")
-
 var MysqlDsn = os.Getenv("MYSQL_DSN")
-
-// var IpBlackList = os.Getenv("IP_BLACK_LIST")
 var IpBlackList = strings.Split(os.Getenv("IP_BLACK_LIST"), ",")
-
 var ProxyUrl = env.String("PROXY_URL", "")
 
 // 隐藏思考过程

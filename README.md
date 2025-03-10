@@ -3,7 +3,7 @@
 </p>
 <div align="center">
 
-# Genspark2API
+# HixAI2Api
 
 _觉得有点意思的话 别忘了点个 ⭐_
 
@@ -17,42 +17,22 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 </div>
 
-> ⚠️目前官方强制校验`ReCaptchaV3`，不通过则模型降智/生图异常,请参考[genspark-playwright-prxoy服务过V3验证](#genspark-playwright-prxoy服务过V3验证)并配置环境变量`RECAPTCHA_PROXY_URL`。
-
 ## 功能
 
-- [x] 支持对话接口(流式/非流式)(`/chat/completions`)(请求非以下列表的模型会触发`Mixture-of-Agents`模式)
-    - **gpt-4o**
-    - **o1**
-    - **o3-mini-high**
-    - **claude-3-5-sonnet**
-    - **claude-3-7-sonnet**
-    - **claude-3-7-sonnet-thinking**
-    - **claude-3-5-haiku**
-    - **gemini-2.0-flash**
-    - **deep-seek-v3**
-    - **deep-seek-r1**
+- [x] 支持对话接口(流式/非流式)(`/chat/completions`),详情查看[支持模型](#支持模型及额度消耗)
 - [x] 支持**联网搜索**,在模型名后添加`-search`即可(如:`gpt-4o-search`)
-- [x] 支持识别**图片**/**文件**多轮对话
-- [x] 支持文生图接口(`/images/generations`)
-    - **flux**
-    - **flux-speed**
-    - **flux-pro/ultra**
-    - **ideogram**
-    - **ideogram/V_2A**
-    - **recraft-v3**
-    - **dall-e-3**
-    - **imagen3**
-- [x] 支持自定义请求头校验值(Authorization)
-- [x] 支持cookie池(随机)
+- [ ] 支持识别**图片**/**文件**多轮对话
+- [x] 支持自定义请求头校验值(Authorization),详情查看[配置API-KEY](#配置API-KEY)
+- [x] 支持cookie池,详情查看[配置COOKIE](#配置COOKIE)
 - [x] 支持请求失败自动切换cookie重试(需配置cookie池)
-- [x] 可配置自动删除对话记录
+- [x] 支持定时更新Cookie剩余Credit额度
 - [x] 可配置代理请求(环境变量`PROXY_URL`)
-- [x] 可配置Model绑定Chat(解决模型自动切换导致**降智**),详细请看[进阶配置](#解决模型自动切换导致降智问题)。
 
 ### 接口文档:
 
-略
+`http://<ip>:<port>/swagger/index.html`
+
+<span><img src="docs/img.png" width="800"/></span>
 
 ### 示例:
 
@@ -64,7 +44,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 ## 如何集成NextChat
 
-填 接口地址(ip:端口/域名) 及 API-Key(`PROXY_SECRET`),其它的随便填随便选。
+填 接口地址(ip:端口/域名) 及 [API-KEY](#配置API-KEY),其它的随便填随便选。
 
 > 如果自己没有搭建NextChat面板,这里有个已经搭建好的可以使用 [NeatChat](https://ai.aytsao.cn/)
 
@@ -72,11 +52,18 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 ## 如何集成one-api
 
-填 `BaseURL`(ip:端口/域名) 及 密钥(`PROXY_SECRET`),其它的随便填随便选。
+填 `BaseURL`(ip:端口/域名) 及 密钥即[API-KEY](#配置API-KEY),其它的随便填随便选。
 
 <span><img src="docs/img3.png" width="800"/></span>
 
 ## 部署
+
+> ❗︎无论哪种部署方式,都需要先部署`MySql`数据库服务,并创建一个数据库。
+
+#### 创建数据库示例sql命令
+```sql
+CREATE DATABASE hix_ai_2_api CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+```
 
 ### 基于 Docker-Compose(All In One) 进行部署
 
@@ -99,9 +86,24 @@ services:
     volumes:
       - ./data:/app/hixai2api/data
     environment:
-      - GS_COOKIE=******  # cookie (多个请以,分隔)
-      - API_SECRET=123456  # [可选]接口密钥-修改此行为请求头校验的值(多个请以,分隔)
+      - MYSQL_DSN=hix-ai-2-api:123456@tcp(db:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai  # 可修改此行 SQL连接信息
+      - BACKEND_SECRET=123456  # [可选]后台管理接口密钥
       - TZ=Asia/Shanghai
+
+  db:
+    image: mysql:8.2.0
+    restart: always
+    container_name: mysql
+    volumes:
+      - ./data/mysql:/var/lib/mysql  # 挂载目录，持久化存储
+    ports:
+      - '3306:3306'
+    environment:
+      TZ: Asia/Shanghai   # 可修改默认时区
+      MYSQL_ROOT_PASSWORD: 'root@123456' # 可修改此行 root用户名 密码
+      MYSQL_USER: hix-ai-2-api   # 可修改初始化专用用户用户名
+      MYSQL_PASSWORD: '123456'    # 可修改初始化专用用户密码
+      MYSQL_DATABASE: hix_ai_2_api   # 可修改初始化专用数据库
 ```
 
 ### 基于 Docker 进行部署
@@ -110,13 +112,13 @@ services:
 docker run --name hixai2api -d --restart always \
 -p 7044:7044 \
 -v $(pwd)/data:/app/hixai2api/data \
--e GS_COOKIE=***** \
--e API_SECRET="123456" \
+-e MYSQL_DSN=hix-ai-2-api:123456@tcp(ip:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai \
+-e BACKEND_SECRET=123456 \
 -e TZ=Asia/Shanghai \
 deanxv/hixai2api
 ```
 
-其中`API_SECRET`、`GS_COOKIE`修改为自己的。
+其中`MYSQL_DSN`、`BACKEND_SECRET`修改为自己的。
 
 如果上面的镜像无法拉取,可以尝试使用 GitHub 的 Docker 镜像,将上面的`deanxv/hixai2api`替换为`ghcr.io/deanxv/hixai2api`即可。
 
@@ -136,9 +138,9 @@ deanxv/hixai2api
 4. Deploy 会自动开始,先取消。
 5. 添加环境变量
 
-   `GS_COOKIE:******`  cookie (多个请以,分隔)
+   `MYSQL_DSN:hix-ai-2-api:123456@tcp(ip:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
 
-   `API_SECRET:123456` [可选]接口密钥-修改此行为请求头校验的值(多个请以,分隔)(与openai-API-KEY用法一致)
+   `BACKEND_SECRET:123456` [可选] 后台管理接口密钥
 
 保存。
 
@@ -166,109 +168,93 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 
 1. `PORT=7044`  [可选]端口,默认为7044
 2. `DEBUG=true`  [可选]DEBUG模式,可打印更多信息[true:打开、false:关闭]
-3. `API_SECRET=123456`  [可选]接口密钥-修改此行为请求头(Authorization)校验的值(同API-KEY)(多个请以,分隔)
-4. `GS_COOKIE=******`  cookie (多个请以,分隔)
-5. `AUTO_DEL_CHAT=0`  [可选]对话完成自动删除(默认:0)[0:关闭,1:开启]
-6. `REQUEST_RATE_LIMIT=60`  [可选]每分钟下的单ip请求速率限制,默认:60次/min
-7. `PROXY_URL=http://127.0.0.1:10801`  [可选]代理
-8. `RECAPTCHA_PROXY_URL=http://127.0.0.1:7022`  [可选]genspark-playwright-prxoy验证服务地址，仅填写域名或ip:端口即可。(示例:`RECAPTCHA_PROXY_URL=https://genspark-playwright-prxoy.com`或`RECAPTCHA_PROXY_URL=http://127.0.0.1:7022`),详情请看[genspark-playwright-prxoy服务过V3验证](#genspark-playwright-prxoy服务过V3验证)
-9. `AUTO_MODEL_CHAT_MAP_TYPE=1`  [可选]自动配置Model绑定Chat(默认:1)[0:关闭,1:开启]
-10. `MODEL_CHAT_MAP=claude-3-7-sonnet=a649******00fa,gpt-4o=su74******47hd`  [可选]Model绑定Chat(多个请以,分隔),详细请看[进阶配置](#解决模型自动切换导致降智问题)
-11. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
-12. `RATE_LIMIT_COOKIE_LOCK_DURATION=600`  [可选]到达速率限制的cookie禁用时间,默认为600s
-13. `REASONING_HIDE=0`  [可选]**隐藏**推理过程(默认:0)[0:关闭,1:开启]
-
-~~14. `SESSION_IMAGE_CHAT_MAP=aed9196b-********-4ed6e32f7e4d=0c6785e6-********-7ff6e5a2a29c,aefwer6b-********-casds22=fda234-********-sfaw123`  [可选]Session绑定Image-Chat(多个请以,分隔),详细请看[进阶配置](#生图模型配置)~~
-
-~~15. `YES_CAPTCHA_CLIENT_KEY=******`  [可选]YesCaptcha Client Key 过谷歌验证,详细请看[使用YesCaptcha过谷歌验证](#使用YesCaptcha过谷歌验证)~~
-
+3. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
+4. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
+5. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
+6. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
+7. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
 
 ### cookie获取方式
 
-1. 打开**F12**开发者工具。
-2. 发起对话。
-3. 点击ask请求,请求头中的**cookie**即为环境变量**GS_COOKIE**所需值。
-
-> **【注】** 其中`__Secure-next-auth.session-token=f9c60******cb6d`是必须的,其他内容可要可不要,即环境变量`GS_COOKIE=__Secure-next-auth.session-token=f9c60******cb6d`
-
-
-![img.png](docs/img.png)
-
 ## 进阶配置
 
-### 解决模型自动切换导致降智问题
+### 配置API-KEY
 
-#### 方案一 (默认启用此配置)【推荐】
+#### curl示例
 
-> 配置环境变量 **AUTO_MODEL_CHAT_MAP_TYPE=1**
->
-> 此配置下,会在调用模型时获取对话的id,并绑定模型。
-
-#### 方案二
-
-> 配置环境变量 MODEL_CHAT_MAP
->
-> 【作用】指定对话,解决模型自动切换导致降智问题。
-
-1. 打开**F12**开发者工具。
-2. 选择需要绑定的对话的模型(示例:`claude-3-7-sonnet`),发起对话。
-3. 点击ask请求,此时最上方url中的`id`(或响应中的`id`)即为此对话唯一id。
-   ![img.png](docs/img4.png)
-4. 配置环境变量 `MODEL_CHAT_MAP=claude-3-7-sonnet=3cdcc******474c5` (多个请以,分隔)
-
-### genspark-playwright-prxoy服务过V3验证
-
-1. docker部署genspark-playwright-prxoy
-
-#### docker
-```docker 
-docker run --name genspark-playwright-proxy -d --restart always \
--p 7022:7022 \
--v $(pwd)/data:/app/genspark-playwright-proxy/data \
--e PROXY_URL=http://account:pwd@ip:port #  [可选] 推荐(住宅)动态代理,配置代理后过验证概率更高,但响应会变慢。
--e TZ=Asia/Shanghai \
-deanxv/genspark-playwright-proxy
+```curl
+curl -X 'PUT' \
+  'http://127.0.0.1:7044/api/key' \
+  -H 'accept: application/json' \
+  -H 'Authorization: 123456' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "apiKey": "sk-******"
+}'
 ```
 
-#### docker-compose
-```docker-compose
-version: '3.4'
+其中`Authorization`为环境变量`BACKEND_SECRET`的值。
 
-services:
-  genspark-playwright-prxoy:
-    image: deanxv/genspark-playwright-proxy:latest
-    container_name: genspark-playwright-prxoy
-    restart: always
-    ports:
-      - "7022:7022"
-    volumes:
-      - ./data:/app/genspark-playwright-prxoy/data
-    environment:
-      - PROXY_URL=http://account:pwd@ip:port #  [可选] 推荐(住宅)动态代理,配置代理后过验证概率更高,但响应会变慢。
+### 配置COOKIE
+
+### 获取cookie
+
+
+1. 打开[HixAi](https://hix.ai/home)
+1. 打开**F12**开发者工具
+3. 进行一次对话
+4. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需cookie值(整个Cookie的值也可以)
+   
+<span><img src="docs/img6.png" width="800"/></span>
+
+
+#### curl示例
+
+```curl
+curl -X 'PUT' \
+  'http://127.0.0.1:7044/api/cookie' \
+  -H 'accept: application/json' \
+  -H 'Authorization: 123456' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "cookie": "user_group=**************cdi6dYqzEUfi_DJOJcg"
+}'
 ```
 
-2. 部署后配置`hixai2api`环境变量`RECAPTCHA_PROXY_URL`，仅填写域名或ip:端口即可。(示例:`RECAPTCHA_PROXY_URL=https://genspark-playwright-prxoy.com`或`RECAPTCHA_PROXY_URL=http://127.0.0.1:7022`)
+其中`Authorization`为环境变量`BACKEND_SECRET`的值。
 
-3. 重启`hixai2api`服务。
+## 支持模型及额度消耗
+
+| 模型名                  | Credit |
+|----------------------|--------|
+| deepseek-r1          | 1      |
+| deepseek-v3          | 1      |
+| chatgpt              | 4      |
+| gpt-3.5-turbo        | 4      |
+| claude               | 4      |
+| claude-3-haiku       | 4      |
+| claude-instant-100k  | 8      |
+| gpt-3.5-turbo-16k    | 12     |
+| claude-3-sonnet      | 20     |
+| gpt-4o               | 30     |
+| gpt-4-turbo          | 35     |
+| claude-2             | 35     |
+| claude-2-100k        | 75     |
+| claude-3-7-sonnet    | 50     |
+| claude-3-5-sonnet-v2 | 100    |
+| grok-2               | 100    |
+| gpt-4o-128k          | 125    |
+| claude-3-opus        | 200    |
+| gpt-4-turbo-128k     | 250    |
+| claude-2-1-200k      | 300    |
+| gpt-4                | 350    |
 
 ## 报错排查
 
-> `Detected Cloudflare Challenge Page`
->
-
-被Cloudflare拦截出5s盾,可配置`PROXY_URL`。
-
-(【推荐方案】[自建ipv6代理池绕过cf对ip的速率限制及5s盾](https://linux.do/t/topic/367413)或购买[IProyal](https://iproyal.cn/?r=244330))
-
-> `Genspark Service Unavailable`
->
-Genspark官方服务不可用,请稍后再试。
-
-> `All cookies are temporarily unavailable.`
->
-所有用户(cookie)均到达速率限制,更换用户cookie或稍后再试。
+略
 
 ## 其他
 
-**Genspark**(
-注册领取1个月Plus): [https://www.genspark.ai](https://www.genspark.ai/invite?invite_code=YjVjMGRkYWVMZmE4YUw5MDc0TDM1ODlMZDYwMzQ4OTJlNmEx)
+略
+
+

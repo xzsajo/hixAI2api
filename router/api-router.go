@@ -3,6 +3,10 @@ package router
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "hixai2api/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"hixai2api/common/config"
 	"hixai2api/controller"
 	"hixai2api/middleware"
@@ -13,6 +17,13 @@ func SetApiRouter(router *gin.Engine) {
 	router.Use(middleware.CORS())
 	router.Use(middleware.IPBlacklistMiddleware())
 	router.Use(middleware.RequestRateLimit())
+
+	if config.SwaggerEnable == "" || config.SwaggerEnable == "1" {
+		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
+
+	// *有静态资源时注释此行
+	router.GET("/")
 
 	v1Router := router.Group(fmt.Sprintf("%s/v1", ProcessPath(config.RoutePrefix)))
 	v1Router.Use(middleware.OpenAIAuth())
