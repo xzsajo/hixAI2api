@@ -60,7 +60,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 ## 部署
 
-> ❗︎无论哪种部署方式,都需要先部署`MySql`数据库服务,并创建一个数据库。
+> ❗︎无论哪种部署方式,都需要先部署`MySql`数据库服务,并创建一个数据库,如果你对Mysql数据库的部署不熟悉,也可以使用[Zeabur部署MySql](#部署到第三方平台)。
 
 #### 创建数据库示例sql命令
 ```sql
@@ -150,6 +150,15 @@ deanxv/hixai2api
 
 </div>
 
+#### Zeabur部署Mysql
+
+<span><img src="docs/img7.png" width="400"/></span>
+
+按照上图创建MySql服务后,在环境变量`MYSQL_DSN`中填写对应的连接信息。
+
+`Username:Password@tcp(Host:Port)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`
+
+同样不要忘记[创建数据库](#创建数据库示例sql命令)。
 
 </details>
 
