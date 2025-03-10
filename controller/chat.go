@@ -158,6 +158,10 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 		var shouldContinue bool
 		thinkStartType := new(bool) // 初始值为false
 		for response := range sseChan {
+			if response.Status == 403 {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Forbidden"})
+				return
+			}
 			if response.Done {
 				logger.Warnf(ctx, response.Data)
 				return
@@ -491,6 +495,12 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 			thinkStartType := new(bool) // 初始值为false
 		SSELoop:
 			for response := range sseChan {
+
+				if response.Status == 403 {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Forbidden"})
+					return false
+				}
+
 				if response.Done {
 					logger.Warnf(ctx, response.Data)
 					return false

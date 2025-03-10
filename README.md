@@ -112,7 +112,7 @@ services:
 docker run --name hixai2api -d --restart always \
 -p 7044:7044 \
 -v $(pwd)/data:/app/hixai2api/data \
--e MYSQL_DSN=hix-ai-2-api:123456@tcp(ip:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai \
+-e MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai \
 -e BACKEND_SECRET=123456 \
 -e TZ=Asia/Shanghai \
 deanxv/hixai2api
@@ -138,7 +138,7 @@ deanxv/hixai2api
 4. Deploy 会自动开始,先取消。
 5. 添加环境变量
 
-   `MYSQL_DSN:hix-ai-2-api:123456@tcp(ip:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
+   `MYSQL_DSN:hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
 
    `BACKEND_SECRET:123456` [可选] 后台管理接口密钥
 
