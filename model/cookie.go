@@ -12,6 +12,7 @@ type Cookie struct {
 	CookieHash string    `json:"cookie_hash" gorm:"type:varchar(255);not null;index"`
 	Credit     int       `json:"credit" gorm:"type:bigint(20);not null"`
 	Remark     string    `json:"remark" gorm:"type:varchar(900)"`
+	UpdateTime time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
 	CreateTime time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 

@@ -145,7 +145,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 			c.JSON(500, gin.H{"error": "Failed to marshal request body"})
 			return
 		}
-		sseChan, err := hixapi.MakeStreamChatRequest(c, client, jsonData, cookie.Cookie)
+		sseChan, err := hixapi.MakeStreamChatRequest(c, client, openAIReq.Model, hixChatId, jsonData, cookie.Cookie)
 		if err != nil {
 			logger.Errorf(ctx, "MakeStreamChatRequest err on attempt %d: %v", attempt+1, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -483,7 +483,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 				c.JSON(500, gin.H{"error": "Failed to marshal request body"})
 				return false
 			}
-			sseChan, err := hixapi.MakeStreamChatRequest(c, client, jsonData, cookie.Cookie)
+			sseChan, err := hixapi.MakeStreamChatRequest(c, client, openAIReq.Model, hixChatId, jsonData, cookie.Cookie)
 			if err != nil {
 				logger.Errorf(ctx, "MakeStreamChatRequest err on attempt %d: %v", attempt+1, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

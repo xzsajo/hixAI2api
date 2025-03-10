@@ -10,6 +10,7 @@ type ApiKey struct {
 	Id         string    `json:"id" gorm:"type:varchar(64);not null;primaryKey"`
 	ApiKey     string    `json:"apiKey" gorm:"type:varchar(255);not null;index"`
 	Remark     string    `json:"remark" gorm:"type:varchar(900)"`
+	UpdateTime time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
 	CreateTime time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 

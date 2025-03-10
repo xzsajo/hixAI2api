@@ -14,6 +14,7 @@ type Chat struct {
 	HixChatId                  string    `json:"hix_chat_id" gorm:"type:varchar(255);not null"`
 	LastMessagesPair           string    `json:"last_messages_pair" gorm:"type:text"`
 	LastMessagesPairSha256Hash string    `json:"last_messages_pair_sha256_hash" gorm:"type:varchar(255);not null;indexidx_cookie_hash_last_messages,priority:2"`
+	UpdateTime                 time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
 	CreateTime                 time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 

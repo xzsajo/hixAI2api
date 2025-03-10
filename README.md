@@ -28,6 +28,8 @@ _觉得有点意思的话 别忘了点个 ⭐_
 - [x] 支持定时更新Cookie剩余Credit额度
 - [x] 可配置代理请求(环境变量`PROXY_URL`)
 
+> ❗︎多轮对话下不支持**重新生成回答**、**自定义上下文**、**自定义system/developer角色Content**。
+
 ### 接口文档:
 
 `http://<ip>:<port>/swagger/index.html`
@@ -251,7 +253,12 @@ curl -X 'PUT' \
 
 ## 报错排查
 
-略
+> `Forbidden`
+>
+
+被各种不可知原因禁止访问,可配置`PROXY_URL`。
+
+(【推荐方案】[自建ipv6代理池绕过cf对ip的速率限制及5s盾](https://linux.do/t/topic/367413)或购买[IProyal](https://iproyal.cn/?r=244330))
 
 ## 其他
 
