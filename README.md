@@ -299,7 +299,6 @@ curl -X 'PUT' \
 
 
 ## 其他
-
-(HixAI)[https://hix.ai/invitation-landing?invite_code=GE942N]
+[HixAI](https://hix.ai/invitation-landing?invite_code=GE942N)
 
 
