@@ -73,7 +73,11 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 		cookieRecord := &model.Cookie{
 			Credit: modelInfo.Credit,
 		}
-		cookies, err = cookieRecord.FindByMinimumCredit(database.DB, modelInfo.Credit)
+		if modelInfo.Type == "STANDARD" {
+			cookies, err = cookieRecord.FindByMinimumCredit(database.DB)
+		} else {
+			cookies, err = cookieRecord.FindByMinimumCreditAdvanced(database.DB)
+		}
 		if err != nil {
 			c.JSON(500, gin.H{"error": "no token"})
 			return
@@ -249,13 +253,15 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 				})
 
 				go func() {
-					credit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
+					isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
 					if err != nil {
 						logger.Errorf(ctx, "MakeSubUsageRequest err: %v", err)
 					}
 					cookieRecord := &model.Cookie{
-						CookieHash: cookie.CookieHash,
-						Credit:     credit,
+						CookieHash:     cookie.CookieHash,
+						Credit:         credit,
+						AdvancedCredit: advancedCredit,
+						IsActiveSub:    isActiveSub,
 					}
 					err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 					if err != nil {
@@ -410,7 +416,11 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 		cookieRecord := &model.Cookie{
 			Credit: modelInfo.Credit,
 		}
-		cookies, err = cookieRecord.FindByMinimumCredit(database.DB, modelInfo.Credit)
+		if modelInfo.Type == "STANDARD" {
+			cookies, err = cookieRecord.FindByMinimumCredit(database.DB)
+		} else {
+			cookies, err = cookieRecord.FindByMinimumCreditAdvanced(database.DB)
+		}
 		if err != nil {
 			c.JSON(500, gin.H{"error": "no token"})
 			return
@@ -565,13 +575,15 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 					}
 
 					go func() {
-						credit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
+						isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
 						if err != nil {
 							logger.Errorf(ctx, "MakeSubUsageRequest err: %v", err)
 						}
 						cookieRecord := &model.Cookie{
-							CookieHash: cookie.CookieHash,
-							Credit:     credit,
+							CookieHash:     cookie.CookieHash,
+							Credit:         credit,
+							AdvancedCredit: advancedCredit,
+							IsActiveSub:    isActiveSub,
 						}
 						err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 						if err != nil {

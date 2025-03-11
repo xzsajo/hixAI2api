@@ -69,13 +69,15 @@ func SaveCookie(c *gin.Context) {
 	defer safeClose(client)
 
 	// 校验cookie
-	credit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
+	isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
 		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	cookie.Credit = credit
+	cookie.IsActiveSub = isActiveSub
+	cookie.AdvancedCredit = advancedCredit
 
 	err = cookie.Create(database.DB)
 	if err != nil {
@@ -163,13 +165,15 @@ func UpdateCookie(c *gin.Context) {
 	client := cycletls.Init()
 	defer safeClose(client)
 	// 校验cookie
-	credit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
+	isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, req.Cookie)
 	if err != nil {
 		logger.Errorf(c.Request.Context(), err.Error())
 		common.SendResponse(c, http.StatusInternalServerError, 1, err.Error(), "")
 		return
 	}
 	cookie.Credit = credit
+	cookie.IsActiveSub = isActiveSub
+	cookie.AdvancedCredit = advancedCredit
 
 	err = cookie.UpdateKeyById(database.DB)
 	if err != nil {
@@ -236,12 +240,14 @@ func RefreshCookieCredit(c *gin.Context) {
 			client := cycletls.Init()
 			defer safeClose(client)
 			for _, k := range cookies {
-				credit, err := hixapi.MakeSubUsageRequest(client, k.Cookie)
+				isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, k.Cookie)
 				if err != nil {
 					logger.Errorf(c.Request.Context(), err.Error())
 					continue
 				}
 				k.Credit = credit
+				k.IsActiveSub = isActiveSub
+				k.AdvancedCredit = advancedCredit
 				err = k.UpdateCreditByCookieHash(database.DB)
 				if err != nil {
 					logger.Errorf(c.Request.Context(), err.Error())

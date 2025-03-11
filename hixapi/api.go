@@ -29,6 +29,21 @@ type CreateChatResponse struct {
 		} `json:"data"`
 	} `json:"result"`
 }
+type HixErrorResp struct {
+	Error struct {
+		Json struct {
+			Message string `json:"message"`
+			Code    int    `json:"code"`
+			Data    struct {
+				Code       string `json:"code"`
+				HttpStatus int    `json:"httpStatus"`
+				Path       string `json:"path"`
+				AppName    string `json:"appName"`
+				UsageType  string `json:"usageType"`
+			} `json:"data"`
+		} `json:"json"`
+	} `json:"error"`
+}
 
 func MakeCreateChatRequest(client cycletls.CycleTLS, cookie string, modelId int) (string, error) {
 	createChatBody := map[string]interface{}{
@@ -64,6 +79,18 @@ func MakeCreateChatRequest(client cycletls.CycleTLS, cookie string, modelId int)
 		return "", err
 	}
 
+	var errorResp []HixErrorResp
+	err = json.Unmarshal([]byte(response.Body), &errorResp)
+	if err != nil {
+		return "", err
+	} else {
+		if len(errorResp) > 0 {
+			if errorResp[0].Error.Json.Code == -32003 {
+				//return "",
+			}
+		}
+	}
+
 	var responses []CreateChatResponse
 	err = json.Unmarshal([]byte(response.Body), &responses)
 	if err != nil {
@@ -85,7 +112,7 @@ type SubUsageResponse struct {
 			JSON struct {
 				UsageList []struct {
 					ID             int    `json:"id"`
-					SubscriptionID *int   `json:"subscription_id"`
+					SubscriptionID string `json:"subscription_id"`
 					TotalCount     int    `json:"total_count"`
 					UseCount       int    `json:"use_count"`
 					Status         string `json:"status"`
@@ -93,7 +120,7 @@ type SubUsageResponse struct {
 					AppName        string `json:"app_name"`
 					DateStart      string `json:"date_start"`
 					DateEnd        string `json:"date_end"`
-					PriceID        *int   `json:"price_id"`
+					PriceID        string `json:"price_id"`
 				} `json:"usageList"`
 				IsActiveSub bool `json:"isActiveSub"`
 			} `json:"json"`
@@ -107,7 +134,7 @@ type SubUsageResponse struct {
 	} `json:"result"`
 }
 
-func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
+func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (bool, int, int, error) {
 	subUsageReqParam := map[string]interface{}{
 		"0": map[string]interface{}{
 			"json": map[string]interface{}{
@@ -122,7 +149,7 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
 	}
 	bytes, err := json.Marshal(subUsageReqParam)
 	if err != nil {
-		return 0, err
+		return false, 0, 0, err
 	}
 	accept := "application/json"
 
@@ -141,13 +168,13 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
 	}, "GET")
 
 	if err != nil {
-		return 0, err
+		return false, 0, 0, err
 	}
 	bodyBytes := []byte(response.Body)
 	var responses []SubUsageResponse
 	err = json.Unmarshal(bodyBytes, &responses)
 	if err != nil {
-		return 0, err
+		return false, 0, 0, err
 	}
 
 	// 检查数组是否非空并提取ID
@@ -155,14 +182,21 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (int, error) {
 		if len(responses[0].Result.Data.JSON.UsageList) > 0 {
 			totalCount := responses[0].Result.Data.JSON.UsageList[0].TotalCount
 			useCount := responses[0].Result.Data.JSON.UsageList[0].UseCount
-			return totalCount - useCount, nil
+			standardCredit := totalCount - useCount
+			advancedCredit := 0
+			if responses[0].Result.Data.JSON.IsActiveSub {
+				// 订阅用户
+				totalCount := responses[0].Result.Data.JSON.UsageList[1].TotalCount
+				useCount := responses[0].Result.Data.JSON.UsageList[1].UseCount
+				advancedCredit = totalCount - useCount
+			}
+			return responses[0].Result.Data.JSON.IsActiveSub, standardCredit, advancedCredit, nil
 		} else {
-			return 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
-
+			return false, 0, 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
 		}
 
 	} else {
-		return 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
+		return false, 0, 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
 	}
 }
 

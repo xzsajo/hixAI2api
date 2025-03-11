@@ -11,6 +11,8 @@ import (
 )
 
 func UpdateCookieCreditTask() {
+	client := cycletls.Init()
+	defer safeClose(client)
 	for {
 		logger.SysLog("hixai2api Scheduled UpdateCookieCreditTask Task Job Start!")
 		cookieRecord := model.Cookie{}
@@ -20,15 +22,15 @@ func UpdateCookieCreditTask() {
 		}
 		if len(cookies) != 0 {
 			for _, cookie := range cookies {
-				client := cycletls.Init()
-				defer safeClose(client)
-				credit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
+				isActiveSub, credit, advancedCredit, err := hixapi.MakeSubUsageRequest(client, cookie.Cookie)
 				if err != nil {
 					logger.SysError(fmt.Sprintf("UpdateCookieCreditTask err: %v", err))
 				}
 				cookieRecord := &model.Cookie{
-					CookieHash: cookie.CookieHash,
-					Credit:     credit,
+					CookieHash:     cookie.CookieHash,
+					Credit:         credit,
+					AdvancedCredit: advancedCredit,
+					IsActiveSub:    isActiveSub,
 				}
 				err = cookieRecord.UpdateCreditByCookieHash(database.DB)
 				if err != nil {

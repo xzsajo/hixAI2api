@@ -236,29 +236,47 @@ curl -X 'PUT' \
 
 ## 支持模型及额度消耗
 
-| 模型名                  | Credit |
-|----------------------|--------|
-| deepseek-r1          | 1      |
-| deepseek-v3          | 1      |
-| chatgpt              | 4      |
-| gpt-3.5-turbo        | 4      |
-| claude               | 4      |
-| claude-3-haiku       | 4      |
-| claude-instant-100k  | 8      |
-| gpt-3.5-turbo-16k    | 12     |
-| claude-3-sonnet      | 20     |
-| gpt-4o               | 30     |
-| gpt-4-turbo          | 35     |
-| claude-2             | 35     |
-| claude-2-100k        | 75     |
-| claude-3-7-sonnet    | 50     |
-| claude-3-5-sonnet-v2 | 100    |
-| grok-2               | 100    |
-| gpt-4o-128k          | 125    |
-| claude-3-opus        | 200    |
-| gpt-4-turbo-128k     | 250    |
-| claude-2-1-200k      | 300    |
-| gpt-4                | 350    |
+| 模型名称                  | 消耗标准额度 | 消耗高级额度 | 类型         |
+|--------------------------|--------------|--------------|--------------|
+| deepseek-r1              | 1            | 0            | 📘 <span style="color: green;">标准</span>  |
+| deepseek-v3              | 1            | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-7-sonnet        | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
+| claude-3-5-haiku         | 10           | 0            | 📘 <span style="color: green;">标准</span>  |
+| openai-o3-mini           | 200          | 0            | 📘 <span style="color: green;">标准</span>  |
+| openai-o1                | 0            | 40           | 🔥 <span style="color: red;">高级</span>    |
+| openai-o1-mini           | 200          | 0            | 📘 <span style="color: green;">标准</span>  |
+| grok-2                   | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-4o                   | 30           | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-4o-128k              | 125          | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-4o-mini              | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-4-turbo              | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
+| gpt-4-turbo-128k         | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
+| gpt4                     | 0            | 45           | 🔥 <span style="color: red;">高级</span>    |
+| claude                   | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-5-sonnet        | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-haiku           | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-opus            | 0            | 45           | 🔥 <span style="color: red;">高级</span>    |
+| claude-3-5-haiku-200k    | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-5-sonnet-200k   | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-sonnet-200k     | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-haiku-200k      | 20           | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-opus-200k       | 0            | 120          | 🔥 <span style="color: red;">高级</span>    |
+| gemini-1-5-flash         | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-5-pro           | 18           | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-5-flash-128k    | 30           | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-5-pro-128k      | 175          | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-5-flash-1m      | 170          | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-5-pro-1m        | 2500         | 0            | 📘 <span style="color: green;">标准</span>  |
+| chatgpt                  | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-3-5-turbo            | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| gpt-3-5-turbo-16k        | 12           | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-instant-100k      | 8            | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-2                 | 35           | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-2-100k            | 75           | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-2-1-200k          | 300          | 0            | 📘 <span style="color: green;">标准</span>  |
+| claude-3-sonnet          | 20           | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini                   | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| gemini-1-0-pro           | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
 
 ## 报错排查
 

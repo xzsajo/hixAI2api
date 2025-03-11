@@ -7,13 +7,15 @@ import (
 )
 
 type Cookie struct {
-	Id         string    `json:"id" gorm:"type:varchar(64);not null;primaryKey"`
-	Cookie     string    `json:"cookie" gorm:"type:text"`
-	CookieHash string    `json:"cookie_hash" gorm:"type:varchar(255);not null;index"`
-	Credit     int       `json:"credit" gorm:"type:bigint(20);not null"`
-	Remark     string    `json:"remark" gorm:"type:varchar(900)"`
-	UpdateTime time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
-	CreateTime time.Time `json:"create_time" gorm:"type:datetime;not null"`
+	Id             string    `json:"id" gorm:"type:varchar(64);not null;primaryKey"`
+	Cookie         string    `json:"cookie" gorm:"type:text"`
+	CookieHash     string    `json:"cookie_hash" gorm:"type:varchar(255);not null;index"`
+	Credit         int       `json:"credit" gorm:"type:bigint(20);not null"`
+	AdvancedCredit int       `json:"advanced_credit" gorm:"type:bigint(20);not null"`
+	IsActiveSub    bool      `json:"is_active_sub" gorm:"type:tinyint(1);not null;default:0"`
+	Remark         string    `json:"remark" gorm:"type:varchar(900)"`
+	UpdateTime     time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
+	CreateTime     time.Time `json:"create_time" gorm:"type:datetime;not null"`
 }
 
 func (c *Cookie) Create(db *gorm.DB) error {
@@ -42,9 +44,9 @@ func (c *Cookie) FindAllCookies(db *gorm.DB) ([]Cookie, error) {
 	return cookies, nil
 }
 
-func (c *Cookie) FindByMinimumCredit(db *gorm.DB, minCredit int) ([]Cookie, error) {
+func (c *Cookie) FindByMinimumCredit(db *gorm.DB) ([]Cookie, error) {
 	var cookies []Cookie
-	result := db.Where("credit >= ?", minCredit).Find(&cookies)
+	result := db.Where("credit >= ?", c.Credit).Find(&cookies)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -130,6 +132,15 @@ func (c *Cookie) UpdateKeyById(db *gorm.DB) error {
 func (c *Cookie) GetAll(db *gorm.DB) ([]Cookie, error) {
 	var cookies []Cookie
 	result := db.Find(&cookies)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return cookies, nil
+}
+
+func (c *Cookie) FindByMinimumCreditAdvanced(db *gorm.DB) ([]Cookie, error) {
+	var cookies []Cookie
+	result := db.Where("advanced_credit >= ? and is_active_sub = 1", c.Credit).Find(&cookies)
 	if result.Error != nil {
 		return nil, result.Error
 	}
