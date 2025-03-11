@@ -300,6 +300,6 @@ curl -X 'PUT' \
 
 ## 其他
 
-略
+(HixAI)[https://hix.ai/invitation-landing?invite_code=GE942N]
 
 
