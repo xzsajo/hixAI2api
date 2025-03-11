@@ -59,12 +59,17 @@ func ChatForOpenAI(c *gin.Context) {
 
 func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq model.OpenAIChatCompletionRequest) {
 	var err error
-
 	var cookies []model.Cookie
-	searchType := false
+	searchType := ""
 	if strings.HasSuffix(openAIReq.Model, "-search") {
 		openAIReq.Model = strings.Replace(openAIReq.Model, "-search", "", 1)
-		searchType = true
+		searchType = "internet"
+	} else if strings.HasSuffix(openAIReq.Model, "-news") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-news", "", 1)
+		searchType = "news"
+	} else if strings.HasSuffix(openAIReq.Model, "-academic") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-academic", "", 1)
+		searchType = "academic"
 	}
 	modelInfo, ok := common.GetHixModelInfo(openAIReq.Model)
 	// 1. 先获取该模型的Credit
@@ -287,7 +292,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	return
 }
 
-func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType bool) (map[string]interface{}, error) {
+func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType string) (map[string]interface{}, error) {
 	if config.PRE_MESSAGES_JSON != "" {
 		err := openAIReq.PrependMessagesFromJSON(config.PRE_MESSAGES_JSON)
 		if err != nil {
@@ -311,13 +316,12 @@ func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAICha
 		"fileUrl":  "",
 		"question": question,
 	}
-	if searchType {
+	if searchType != "" &&
+		(searchType == "internet" || searchType == "news" || searchType == "academic") {
 		requestBody["search"] = true
-		requestBody["searchType"] = "internet"
+		requestBody["searchType"] = searchType
 	}
-
 	// 创建请求体
-
 	logger.Debug(c.Request.Context(), fmt.Sprintf("RequestBody: %v", requestBody))
 
 	return requestBody, nil
@@ -403,11 +407,16 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	var cookies []model.Cookie
-	searchType := false
+	searchType := ""
 	if strings.HasSuffix(openAIReq.Model, "-search") {
 		openAIReq.Model = strings.Replace(openAIReq.Model, "-search", "", 1)
-		searchType = true
-
+		searchType = "internet"
+	} else if strings.HasSuffix(openAIReq.Model, "-news") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-news", "", 1)
+		searchType = "news"
+	} else if strings.HasSuffix(openAIReq.Model, "-academic") {
+		openAIReq.Model = strings.Replace(openAIReq.Model, "-academic", "", 1)
+		searchType = "academic"
 	}
 	modelInfo, ok := common.GetHixModelInfo(openAIReq.Model)
 	// 1. 先获取该模型的Credit
