@@ -287,6 +287,15 @@ curl -X 'PUT' \
 
 (【推荐方案】[自建ipv6代理池绕过cf对ip的速率限制及5s盾](https://linux.do/t/topic/367413)或购买[IProyal](https://iproyal.cn/?r=244330))
 
+> `No valid cookies available`
+>
+
+无可用Cookie,可能原因:
+
+   1. 没有配置有效Cookie。
+   2. 调用了高级模型,但没有配置高级Cookie。
+
+
 ## 其他
 
 略
