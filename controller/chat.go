@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"github.com/deanxv/CycleTLS/cycletls"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo/mutable"
 	"gorm.io/gorm"
 	"hixai2api/common"
 	"hixai2api/common/config"
 	logger "hixai2api/common/loggger"
+
 	"hixai2api/database"
 	"hixai2api/hixapi"
 	"hixai2api/model"
@@ -127,6 +129,8 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 
 	responseId := fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405"))
 	ctx := c.Request.Context()
+
+	mutable.Shuffle(cookies)
 
 	maxRetries := len(cookies)
 
@@ -474,6 +478,8 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 
 	responseId := fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405"))
 	ctx := c.Request.Context()
+
+	mutable.Shuffle(cookies)
 
 	maxRetries := len(cookies)
 
