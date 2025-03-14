@@ -727,6 +727,14 @@ func processNoStreamData(c *gin.Context, data string, responseId, model string, 
 
 }
 
+// OpenaiModels @Summary OpenAI模型列表接口
+// @Description OpenAI模型列表接口
+// @Tags OpenAI
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization API-KEY"
+// @Success 200 {object} common.ResponseResult{data=model.OpenaiModelListResponse} "成功"
+// @Router /v1/models [get]
 func OpenaiModels(c *gin.Context) {
 	var modelsResp []string
 

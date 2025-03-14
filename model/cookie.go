@@ -80,7 +80,10 @@ func QueryCookiesByChatHashAndModelAndCredit(db *gorm.DB, lastMessagesPairSha256
 
 func (c *Cookie) UpdateCreditByCookieHash(db *gorm.DB) error {
 	// 使用 GORM 的 Model 方法指定模型，并使用 Where 方法指定条件
-	result := db.Model(&Cookie{}).Where("cookie_hash = ?", c.CookieHash).Update("credit", c.Credit)
+	result := db.Model(&Cookie{}).Where("cookie_hash = ?", c.CookieHash).
+		Update("credit", c.Credit).
+		Update("advanced_credit", c.AdvancedCredit).
+		Update("is_active_sub", c.IsActiveSub)
 	if result.Error != nil {
 		return result.Error
 	}

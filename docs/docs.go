@@ -357,6 +357,49 @@ const docTemplate = `{
                 ],
                 "responses": {}
             }
+        },
+        "/v1/models": {
+            "get": {
+                "description": "OpenAI模型列表接口",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OpenAI"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization API-KEY",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.ResponseResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.OpenaiModelListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -500,6 +543,31 @@ const docTemplate = `{
             "properties": {
                 "content": {},
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OpenaiModelListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.OpenaiModelResponse"
+                    }
+                },
+                "object": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OpenaiModelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "object": {
                     "type": "string"
                 }
             }

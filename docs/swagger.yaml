@@ -99,6 +99,22 @@ definitions:
       role:
         type: string
     type: object
+  model.OpenaiModelListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.OpenaiModelResponse'
+        type: array
+      object:
+        type: string
+    type: object
+  model.OpenaiModelResponse:
+    properties:
+      id:
+        type: string
+      object:
+        type: string
+    type: object
 info:
   contact: {}
   description: HIX-AI-2API
@@ -325,6 +341,31 @@ paths:
       produces:
       - application/json
       responses: {}
+      tags:
+      - OpenAI
+  /v1/models:
+    get:
+      consumes:
+      - application/json
+      description: OpenAI模型列表接口
+      parameters:
+      - description: Authorization API-KEY
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.ResponseResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.OpenaiModelListResponse'
+              type: object
       tags:
       - OpenAI
 swagger: "2.0"
