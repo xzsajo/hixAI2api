@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"hixai2api/common"
 	"time"
@@ -145,4 +146,30 @@ func (c *Cookie) FindByMinimumCreditAdvanced(db *gorm.DB) ([]Cookie, error) {
 		return nil, result.Error
 	}
 	return cookies, nil
+}
+
+func (c *Cookie) FindMaxCreditByActiveSub(db *gorm.DB) ([]Cookie, error) {
+	var maxCookies []Cookie
+
+	// 查询 IsActiveSub=0 时 credit 最大的记录
+	var inactiveMax Cookie
+	result := db.Where("is_active_sub = ?", 0).Order("credit DESC").First(&inactiveMax)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		maxCookies = append(maxCookies, inactiveMax)
+	}
+
+	// 查询 IsActiveSub=1 时 credit 最大的记录
+	var activeMax Cookie
+	result = db.Where("is_active_sub = ?", 1).Order("credit DESC").First(&activeMax)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, result.Error
+	}
+	if result.RowsAffected > 0 {
+		maxCookies = append(maxCookies, activeMax)
+	}
+
+	return maxCookies, nil
 }

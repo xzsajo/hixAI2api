@@ -730,7 +730,39 @@ func processNoStreamData(c *gin.Context, data string, responseId, model string, 
 func OpenaiModels(c *gin.Context) {
 	var modelsResp []string
 
-	modelsResp = common.GetHixModelList()
+	maxCookies, err := (&model.Cookie{}).FindMaxCreditByActiveSub(database.DB)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 提取两种状态的credit
+	var standardCredit, advancedCredit int
+	hasStandard := false
+	hasAdvanced := false
+	for _, cookie := range maxCookies {
+		if !cookie.IsActiveSub {
+			standardCredit = cookie.Credit
+			hasStandard = true
+		} else {
+			advancedCredit = cookie.AdvancedCredit
+			hasAdvanced = true
+		}
+	}
+
+	// 遍历modelRegistry，收集符合条件的模型
+	modelsResp = make([]string, 0)
+	for modelName, info := range common.ModelRegistry {
+		credit := info.Credit
+		modelType := info.Type
+
+		if modelType == "STANDARD" && hasStandard && standardCredit >= credit {
+			modelsResp = append(modelsResp, modelName)
+		}
+		if modelType == "ADVANCED" && hasAdvanced && advancedCredit >= credit {
+			modelsResp = append(modelsResp, modelName)
+		}
+	}
 
 	var openaiModelListResponse model.OpenaiModelListResponse
 	var openaiModelResponse []model.OpenaiModelResponse
