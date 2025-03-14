@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"github.com/deanxv/CycleTLS/cycletls"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo/mutable"
 	"gorm.io/gorm"
 	"hixai2api/common"
 	"hixai2api/common/config"
 	logger "hixai2api/common/loggger"
+
 	"hixai2api/database"
 	"hixai2api/hixapi"
 	"hixai2api/model"
@@ -128,6 +130,8 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	responseId := fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405"))
 	ctx := c.Request.Context()
 
+	mutable.Shuffle(cookies)
+
 	maxRetries := len(cookies)
 
 	var messagesPair []model.OpenAIChatMessage
@@ -143,7 +147,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 			hixChatId = chatId
 		}
 
-		requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType)
+		requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -292,7 +296,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	return
 }
 
-func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType string) (map[string]interface{}, error) {
+func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType string, modelInfo common.HixModelInfo) (map[string]interface{}, error) {
 	if config.PRE_MESSAGES_JSON != "" {
 		err := openAIReq.PrependMessagesFromJSON(config.PRE_MESSAGES_JSON)
 		if err != nil {
@@ -304,7 +308,7 @@ func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAICha
 	switch content := openAIReq.Messages[0].Content.(type) {
 	case string:
 		runeCountInString := utf8.RuneCountInString(content)
-		if runeCountInString > 8000 {
+		if runeCountInString > modelInfo.MaxTokens {
 			return nil, fmt.Errorf("input text too long: %d", runeCountInString)
 		}
 		question = content
@@ -475,6 +479,8 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 	responseId := fmt.Sprintf(responseIDFormat, time.Now().Format("20060102150405"))
 	ctx := c.Request.Context()
 
+	mutable.Shuffle(cookies)
+
 	maxRetries := len(cookies)
 
 	var messagesPair []model.OpenAIChatMessage
@@ -491,7 +497,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 				hixChatId = chatId
 			}
 
-			requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType)
+			requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return false
