@@ -71,8 +71,18 @@ func openSQLite() (*gorm.DB, error) {
 	logger.SysLog("SQL_DSN not set, using SQLite as database")
 	common.UsingSQLite = true
 	dsn := fmt.Sprintf("%s?_busy_timeout=%d", common.SQLitePath, common.SQLiteBusyTimeout)
+	newLogger := gormlog.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		gormlog.Config{
+			SlowThreshold:             time.Second,    // Slow SQL threshold
+			LogLevel:                  gormlog.Silent, // Log level
+			IgnoreRecordNotFoundError: true,           // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,           // Don't include params in the SQL log
+			Colorful:                  false,          // Disable color
+		},
+	)
 	return gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		PrepareStmt: true, // precompile SQL
+		Logger: newLogger,
 	})
 }
 
