@@ -28,7 +28,8 @@ FROM alpine:latest
 
 # 安装运行时基础依赖
 RUN apk add --no-cache \
-    ca-certificates
+    ca-certificates \
+    tzdata
 
 # 从构建阶段复制二进制文件
 COPY --from=builder /app/hixai2api /hixai2api
