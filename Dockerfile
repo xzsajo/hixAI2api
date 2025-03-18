@@ -24,7 +24,7 @@ RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'"
 
 # ----------------------------
 # 运行时阶段：最小化 Alpine 镜像
-FROM alpine
+FROM alpine:latest
 
 # 安装运行时基础依赖
 RUN apk add --no-cache \
