@@ -20,7 +20,7 @@ RUN go mod download
 
 # 复制源码并静态编译
 COPY . .
-RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'" -o /app/hixai2api
+RUN go build -o /hixai2api
 
 # ----------------------------
 # 运行时阶段：最小化 Alpine 镜像
