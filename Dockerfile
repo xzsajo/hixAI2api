@@ -1,5 +1,5 @@
 # 构建阶段：使用 Alpine 镜像确保 musl libc 兼容性
-FROM golang AS builder
+FROM golang:alpine AS builder
 
 # 安装编译依赖（SQLite + CGO 必需）
 RUN apk add --no-cache \
