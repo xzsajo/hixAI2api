@@ -1,35 +1,40 @@
-# 使用 Golang 镜像作为构建阶段
-FROM golang AS builder
+# 构建阶段：使用 Alpine 镜像确保 musl libc 兼容性
+FROM golang:alpine AS builder
 
-# 设置环境变量
-ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
+# 安装编译依赖（SQLite + CGO 必需）
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    sqlite-dev
+
+# 启用 CGO 并配置环境
+ENV CGO_ENABLED=1 \
+    GO111MODULE=on \
     GOOS=linux
 
-# 设置工作目录
 WORKDIR /build
 
-# 复制 go.mod 和 go.sum 文件,先下载依赖
+# 复制依赖文件（利用 Docker 缓存层加速构建）
 COPY go.mod go.sum ./
-#ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
-# 复制整个项目并构建可执行文件
+# 复制源码并静态编译
 COPY . .
-RUN go build -o /hixai2api
+RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'" -o /app/hixai2api
 
-# 使用 Alpine 镜像作为最终镜像
-FROM alpine
+# ----------------------------
+# 运行时阶段：最小化 Alpine 镜像
+FROM alpine:latest
 
-# 安装基本的运行时依赖
-RUN apk --no-cache add ca-certificates tzdata
+# 安装运行时基础依赖
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata
 
-# 从构建阶段复制可执行文件
-COPY --from=builder /hixai2api .
+# 从构建阶段复制二进制文件
+COPY --from=builder /app/hixai2api /hixai2api
 
-# 暴露端口
+# 配置容器
 EXPOSE 7044
-# 工作目录
 WORKDIR /app/hixai2api/data
-# 设置入口命令
 ENTRYPOINT ["/hixai2api"]

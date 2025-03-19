@@ -10,6 +10,7 @@ import (
 var BackendSecret = os.Getenv("BACKEND_SECRET")
 var MysqlDsn = os.Getenv("MYSQL_DSN")
 var IpBlackList = strings.Split(os.Getenv("IP_BLACK_LIST"), ",")
+var DebugSQLEnabled = strings.ToLower(os.Getenv("DEBUG_SQL")) == "true"
 var ProxyUrl = env.String("PROXY_URL", "")
 
 // 隐藏思考过程

@@ -26,6 +26,12 @@ func main() {
 	logger.SetupLogger()
 	logger.SysLog(fmt.Sprintf("hixai2api %s starting...", common.Version))
 	database.InitDB()
+	defer func() {
+		err := database.CloseDB()
+		if err != nil {
+			logger.FatalLog("failed to close database: " + err.Error())
+		}
+	}()
 	check.CheckEnvVariable()
 
 	if os.Getenv("GIN_MODE") != "debug" {

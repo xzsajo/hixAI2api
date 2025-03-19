@@ -10,7 +10,7 @@ services:
     volumes:
       - ./data:/app/hixai2api/data
     environment:
-      - MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai  # 可修改此行 SQL连接信息
+      - MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai  #  [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
       - TZ=Asia/Shanghai
 
   db:

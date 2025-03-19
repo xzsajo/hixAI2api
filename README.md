@@ -62,7 +62,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 ## 部署
 
-> ❗︎无论哪种部署方式,都需要先部署`MySql`数据库服务,并创建一个数据库,如果你对`Mysql`数据库服务的部署不熟悉,也可以使用[部署到 Zeabur中的Zeabur部署Mysql](#部署到第三方平台)。
+> 如果配置了`MYSQL_DSN`环境变量即使用了`MySql`数据库服务,请参考如下命令新建该项目所需的库。如果想配置`MYSQL_DSN`但对部署`MySql`服务不熟悉可以参考[部署到 Zeabur中的Zeabur部署Mysql](#部署到第三方平台)。
 
 #### 创建数据库示例sql命令
 ```sql
@@ -77,6 +77,8 @@ docker-compose pull && docker-compose up -d
 
 #### docker-compose.yml
 
+> 不配置`MYSQL_DSN`时,services中的`db`服务可去掉。项目会采用Sqlite。
+
 ```docker
 version: '3.4'
 
@@ -90,7 +92,7 @@ services:
     volumes:
       - ./data:/app/hixai2api/data
     environment:
-      - MYSQL_DSN=hix-ai-2-api:123456@tcp(db:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai  # 可修改此行 SQL连接信息
+      - MYSQL_DSN=hix-ai-2-api:123456@tcp(db:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai  # [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
       - BACKEND_SECRET=123456  # [可选]后台管理接口密钥
       - TZ=Asia/Shanghai
 
@@ -122,7 +124,7 @@ docker run --name hixai2api -d --restart always \
 deanxv/hixai2api
 ```
 
-其中`MYSQL_DSN`、`BACKEND_SECRET`修改为自己的。
+其中`MYSQL_DSN`[可选]、`BACKEND_SECRET`修改为自己的。
 
 如果上面的镜像无法拉取,可以尝试使用 GitHub 的 Docker 镜像,将上面的`deanxv/hixai2api`替换为`ghcr.io/deanxv/hixai2api`即可。
 
@@ -142,9 +144,9 @@ deanxv/hixai2api
 4. Deploy 会自动开始,先取消。
 5. 添加环境变量
 
-   `MYSQL_DSN:hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
+   `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
 
-   `BACKEND_SECRET:123456` [可选] 后台管理接口密钥
+   `BACKEND_SECRET=123456` [可选] 后台管理接口密钥
 
 保存。
 
@@ -181,11 +183,12 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 
 1. `PORT=7044`  [可选]端口,默认为7044
 2. `DEBUG=true`  [可选]DEBUG模式,可打印更多信息[true:打开、false:关闭]
-3. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
-4. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
-5. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
-6. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
-7. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
+3. `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` # [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
+4. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
+5. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
+6. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
+7. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
+8. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
 
 ### cookie获取方式
 
