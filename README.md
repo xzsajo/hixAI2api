@@ -23,7 +23,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 - [x] 支持**联网搜索**,在模型名后添加`-search`即可(如:`deepseek-r1-search`)
 - [x] 支持**新闻媒体搜索**,在模型名后添加`-news`即可(如:`deepseek-r1-news`)
 - [x] 支持**学术数据库搜索**,在模型名后添加`-academic`即可(如:`deepseek-r1-academic`)
-- [ ] 支持识别**图片**/**文件**多轮对话
+- [x] 支持识别**图片**/**文件**多轮对话
 - [x] 支持自定义请求头校验值(Authorization),详情查看[配置API-KEY](#配置API-KEY)
 - [x] 支持cookie池,详情查看[配置COOKIE](#配置COOKIE)
 - [x] 支持请求失败自动切换cookie重试(需配置cookie池)
