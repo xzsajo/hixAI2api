@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,12 +12,12 @@ import (
 	"hixai2api/common"
 	"hixai2api/common/config"
 	logger "hixai2api/common/loggger"
-
 	"hixai2api/database"
 	"hixai2api/hixapi"
 	"hixai2api/model"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -147,7 +148,7 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 			hixChatId = chatId
 		}
 
-		requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo)
+		requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo, cookie.Cookie)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -296,7 +297,11 @@ func handleNonStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq 
 	return
 }
 
-func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType string, modelInfo common.HixModelInfo) (map[string]interface{}, error) {
+func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAIChatCompletionRequest, searchType string, modelInfo common.HixModelInfo, cookie string) (map[string]interface{}, error) {
+
+	client := cycletls.Init()
+	defer safeClose(client)
+
 	if config.PRE_MESSAGES_JSON != "" {
 		err := openAIReq.PrependMessagesFromJSON(config.PRE_MESSAGES_JSON)
 		if err != nil {
@@ -305,6 +310,7 @@ func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAICha
 	}
 	openAIReq.FilterUserMessage()
 	var question string
+	fileUrl := ""
 	switch content := openAIReq.Messages[0].Content.(type) {
 	case string:
 		runeCountInString := utf8.RuneCountInString(content)
@@ -312,12 +318,48 @@ func createRequestBody(c *gin.Context, chatId string, openAIReq *model.OpenAICha
 			return nil, fmt.Errorf("input text too long: %d", runeCountInString)
 		}
 		question = content
+	case []interface{}:
+		// 逆序查找最后一个image_url
+		for i := len(content) - 1; i >= 0; i-- {
+			elem, ok := content[i].(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid message content element type: %T", content[i])
+			}
+			if elemType, _ := elem["type"].(string); elemType == "image_url" {
+				if imageURLMap, ok := elem["image_url"].(map[string]interface{}); ok {
+					if u, ok := imageURLMap["url"].(string); ok {
+						finalUrl, err := processUrl(c, client, chatId, cookie, u)
+						if err != nil {
+							return nil, err
+						}
+						fileUrl = finalUrl
+						break
+					}
+				}
+			}
+		}
+		for i := len(content) - 1; i >= 0; i-- {
+			elem, ok := content[i].(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid message content element type: %T", content[i])
+			}
+			if elemType, _ := elem["type"].(string); elemType == "text" {
+				if text, ok := elem["text"].(string); ok {
+					question = text
+					break
+				}
+			}
+		}
+		if runeCount := utf8.RuneCountInString(question); runeCount > modelInfo.MaxTokens {
+			return nil, fmt.Errorf("input text too long: %d", runeCount)
+		}
 	default:
 		return nil, fmt.Errorf("Invalid message content type: %T", content)
 	}
+
 	requestBody := map[string]interface{}{
 		"chatId":   chatId,
-		"fileUrl":  "",
+		"fileUrl":  fileUrl,
 		"question": question,
 	}
 	if searchType != "" &&
@@ -497,7 +539,7 @@ func handleStreamRequest(c *gin.Context, client cycletls.CycleTLS, openAIReq mod
 				hixChatId = chatId
 			}
 
-			requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo)
+			requestBody, err := createRequestBody(c, hixChatId, &openAIReq, searchType, modelInfo, cookie.Cookie)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return false
@@ -794,4 +836,68 @@ func safeClose(client cycletls.CycleTLS) {
 	if client.RespChan != nil {
 		close(client.RespChan)
 	}
+}
+
+func processUrl(c *gin.Context, client cycletls.CycleTLS, chatId, cookie string, url string) (string, error) {
+	// 判断是否为URL
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		// 下载文件
+		bytes, err := fetchImageBytes(url)
+		if err != nil {
+			logger.Errorf(c.Request.Context(), fmt.Sprintf("fetchImageBytes err  %v\n", err))
+			return "", fmt.Errorf("fetchImageBytes err  %v\n", err)
+		}
+
+		base64Str := base64.StdEncoding.EncodeToString(bytes)
+
+		finalUrl, err := processBytes(c, client, chatId, cookie, base64Str)
+		if err != nil {
+			logger.Errorf(c.Request.Context(), fmt.Sprintf("processBytes err  %v\n", err))
+			return "", fmt.Errorf("processBytes err  %v\n", err)
+		}
+		return finalUrl, nil
+	} else {
+		finalUrl, err := processBytes(c, client, chatId, cookie, url)
+		if err != nil {
+			logger.Errorf(c.Request.Context(), fmt.Sprintf("processBytes err  %v\n", err))
+			return "", fmt.Errorf("processBytes err  %v\n", err)
+		}
+		return finalUrl, nil
+	}
+}
+
+func fetchImageBytes(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("http.Get err: %v\n", err)
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
+func processBytes(c *gin.Context, client cycletls.CycleTLS, chatId, cookie string, base64Str string) (string, error) {
+	// 检查类型
+	fileType := common.DetectFileType(base64Str)
+	if !fileType.IsValid {
+		return "", fmt.Errorf("invalid file type %s", fileType.Extension)
+	}
+	signUrl, err := hixapi.GetSignURL(client, cookie, chatId, fileType.Extension)
+	if err != nil {
+		logger.Errorf(c.Request.Context(), fmt.Sprintf("GetSignURL err  %v\n", err))
+		return "", fmt.Errorf("GetSignURL err: %v\n", err)
+	}
+
+	err = hixapi.UploadToS3(client, signUrl, base64Str, fileType.MimeType)
+	if err != nil {
+		logger.Errorf(c.Request.Context(), fmt.Sprintf("UploadToS3 err  %v\n", err))
+		return "", err
+	}
+
+	u, err := url.Parse(signUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path), nil
 }

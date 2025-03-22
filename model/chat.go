@@ -12,7 +12,7 @@ type Chat struct {
 	Model                      string    `json:"model" gorm:"type:varchar(255);not null;index:idx_cookie_hash_last_messages,priority:1"`
 	CookieHash                 string    `json:"cookie_hash" gorm:"type:varchar(255);not null"`
 	HixChatId                  string    `json:"hix_chat_id" gorm:"type:varchar(255);not null"`
-	LastMessagesPair           string    `json:"last_messages_pair" gorm:"type:text"`
+	LastMessagesPair           string    `json:"last_messages_pair" gorm:"type:longtext"`
 	LastMessagesPairSha256Hash string    `json:"last_messages_pair_sha256_hash" gorm:"type:varchar(255);not null;indexidx_cookie_hash_last_messages,priority:2"`
 	UpdateTime                 time.Time `json:"update_time" gorm:"type:datetime;autoUpdateTime"`
 	CreateTime                 time.Time `json:"create_time" gorm:"type:datetime;not null"`
