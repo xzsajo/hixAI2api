@@ -187,9 +187,10 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 3. `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` # [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
 4. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
 5. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
-6. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
-7. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
-8. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
+6. `CHAT_MAX_DAYS=7`  [可选]对话记录保留天数(默认:-1[永久保留])
+7. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
+8. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
+9. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
 
 ### cookie获取方式
 
