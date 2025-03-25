@@ -38,11 +38,15 @@ func UpdateCookieCreditTask() {
 				}
 			}
 		}
-		logger.SysLog("hixai2api Scheduled UpdateCookieCreditTask Task Job  End!")
-		time.Sleep(60 * time.Minute)
+		logger.SysLog("hixai2api Scheduled UpdateCookieCreditTask Task Job End!")
+
+		// 计算到下一个整点的时间
+		now := time.Now()
+		next := now.Add(time.Hour)
+		next = time.Date(next.Year(), next.Month(), next.Day(), next.Hour(), 0, 0, 0, next.Location())
+		time.Sleep(next.Sub(now))
 	}
 }
-
 func safeClose(client cycletls.CycleTLS) {
 	if client.ReqChan != nil {
 		close(client.ReqChan)

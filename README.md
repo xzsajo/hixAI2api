@@ -65,6 +65,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 > 如果配置了`MYSQL_DSN`环境变量即使用了`MySql`数据库服务,请参考如下命令新建该项目所需的库。如果想配置`MYSQL_DSN`但对部署`MySql`服务不熟悉可以参考[部署到 Zeabur中的Zeabur部署Mysql](#部署到第三方平台)。
 
 #### 创建数据库示例sql命令
+
 ```sql
 CREATE DATABASE hix_ai_2_api CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 ```
@@ -144,7 +145,7 @@ deanxv/hixai2api
 4. Deploy 会自动开始,先取消。
 5. 添加环境变量
 
-   `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`  MYSQL连接信息
+   `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` MYSQL连接信息
 
    `BACKEND_SECRET=123456` [可选] 后台管理接口密钥
 
@@ -186,9 +187,10 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 3. `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` # [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
 4. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
 5. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
-6. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
-7. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
-8. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
+6. `CHAT_MAX_DAYS=7`  [可选]对话记录保留天数(默认:-1[永久保留])
+7. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
+8. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
+9. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
 
 ### cookie获取方式
 
@@ -215,14 +217,12 @@ curl -X 'PUT' \
 
 ### 获取cookie
 
-
 1. 打开[HixAi](https://hix.ai/home)
 1. 打开**F12**开发者工具
 3. 进行一次对话
 4. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需cookie值(整个Cookie的值也可以)
-   
-<span><img src="docs/img6.png" width="800"/></span>
 
+<span><img src="docs/img6.png" width="800"/></span>
 
 #### curl示例
 
@@ -241,47 +241,47 @@ curl -X 'PUT' \
 
 ## 支持模型及额度消耗
 
-| 模型名称                  | 消耗标准额度 | 消耗高级额度 | 类型         |
-|--------------------------|--------------|--------------|--------------|
-| deepseek-r1              | 1            | 0            | 📘 <span style="color: green;">标准</span>  |
-| deepseek-v3              | 1            | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-7-sonnet        | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
-| claude-3-5-haiku         | 10           | 0            | 📘 <span style="color: green;">标准</span>  |
-| openai-o3-mini           | 200          | 0            | 📘 <span style="color: green;">标准</span>  |
-| openai-o1                | 0            | 40           | 🔥 <span style="color: red;">高级</span>    |
-| openai-o1-mini           | 200          | 0            | 📘 <span style="color: green;">标准</span>  |
-| grok-2                   | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-4o                   | 30           | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-4o-128k              | 125          | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-4o-mini              | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-4-turbo              | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
-| gpt-4-turbo-128k         | 0            | 20           | 🔥 <span style="color: red;">高级</span>    |
-| gpt4                     | 0            | 45           | 🔥 <span style="color: red;">高级</span>    |
-| claude                   | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-5-sonnet        | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-haiku           | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-opus            | 0            | 45           | 🔥 <span style="color: red;">高级</span>    |
-| claude-3-5-haiku-200k    | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-5-sonnet-200k   | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-sonnet-200k     | 100          | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-haiku-200k      | 20           | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-opus-200k       | 0            | 120          | 🔥 <span style="color: red;">高级</span>    |
-| gemini-1-5-flash         | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-5-pro           | 18           | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-5-flash-128k    | 30           | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-5-pro-128k      | 175          | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-5-flash-1m      | 170          | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-5-pro-1m        | 2500         | 0            | 📘 <span style="color: green;">标准</span>  |
-| chatgpt                  | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-3-5-turbo            | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| gpt-3-5-turbo-16k        | 12           | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-instant-100k      | 8            | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-2                 | 35           | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-2-100k            | 75           | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-2-1-200k          | 300          | 0            | 📘 <span style="color: green;">标准</span>  |
-| claude-3-sonnet          | 20           | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini                   | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
-| gemini-1-0-pro           | 4            | 0            | 📘 <span style="color: green;">标准</span>  |
+| 模型名称                   | 消耗标准额度 | 消耗高级额度 | 类型                                       |
+|------------------------|--------|--------|------------------------------------------|
+| deepseek-r1            | 1      | 0      | 📘 <span style="color: green;">标准</span> |
+| deepseek-v3            | 1      | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-7-sonnet      | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
+| claude-3-5-haiku       | 10     | 0      | 📘 <span style="color: green;">标准</span> |
+| openai-o3-mini         | 200    | 0      | 📘 <span style="color: green;">标准</span> |
+| openai-o1              | 0      | 40     | 🔥 <span style="color: red;">高级</span>   |
+| openai-o1-mini         | 200    | 0      | 📘 <span style="color: green;">标准</span> |
+| grok-2                 | 100    | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-4o                 | 30     | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-4o-128k            | 125    | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-4o-mini            | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-4-turbo            | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
+| gpt-4-turbo-128k       | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
+| gpt4                   | 0      | 45     | 🔥 <span style="color: red;">高级</span>   |
+| claude                 | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-5-sonnet      | 100    | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-haiku         | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-opus          | 0      | 45     | 🔥 <span style="color: red;">高级</span>   |
+| claude-3-5-haiku-200k  | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-5-sonnet-200k | 100    | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-sonnet-200k   | 100    | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-haiku-200k    | 20     | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-opus-200k     | 0      | 120    | 🔥 <span style="color: red;">高级</span>   |
+| gemini-1-5-flash       | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro         | 18     | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-flash-128k  | 30     | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro-128k    | 175    | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-flash-1m    | 170    | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro-1m      | 2500   | 0      | 📘 <span style="color: green;">标准</span> |
+| chatgpt                | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-3-5-turbo          | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| gpt-3-5-turbo-16k      | 12     | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-instant-100k    | 8      | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-2               | 35     | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-2-100k          | 75     | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-2-1-200k        | 300    | 0      | 📘 <span style="color: green;">标准</span> |
+| claude-3-sonnet        | 20     | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini                 | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| gemini-1-0-pro         | 4      | 0      | 📘 <span style="color: green;">标准</span> |
 
 ## 报错排查
 
@@ -297,11 +297,11 @@ curl -X 'PUT' \
 
 无可用Cookie,可能原因:
 
-   1. 没有配置有效Cookie。
-   2. 调用了高级模型,但没有配置高级Cookie。
-
+1. 没有配置有效Cookie。
+2. 调用了高级模型,但没有配置高级Cookie。
 
 ## 其他
+
 [HixAI](https://hix.ai/invitation-landing?invite_code=GE942N)(注册获取50Credit)
 
 

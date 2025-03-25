@@ -41,7 +41,10 @@ func main() {
 	var err error
 
 	model.InitTokenEncoders()
+
 	go job.UpdateCookieCreditTask()
+	go job.DelChatTask()
+
 	server := gin.New()
 	server.Use(gin.Recovery())
 	server.Use(middleware.RequestId())

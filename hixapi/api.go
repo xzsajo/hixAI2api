@@ -13,6 +13,7 @@ const (
 	baseURL            = "https://hix.ai"
 	chatEndpoint       = baseURL + "/api/hix/chat"
 	createChatEndpoint = baseURL + "/api/trpc/hixChat.createChat?batch=1"
+	delChatEndpoint    = baseURL + "/api/trpc/hixChat.deleteChat?batch=1"
 	subUsageEndpoint   = baseURL + "/api/trpc/subUsage.getSubUsage?batch=1"
 	deleteEndpoint     = baseURL + "/api/project/delete?project_id=%s"
 	uploadEndpoint     = baseURL + "/api/get_upload_personal_image_url"
@@ -200,17 +201,26 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (bool, int, in
 	}
 }
 
-// makeRequest 发送HTTP请求
-func makeChatRequest(client cycletls.CycleTLS, jsonData []byte, cookie string, isStream bool) (cycletls.Response, error) {
+func MakeDelChatRequest(client cycletls.CycleTLS, cookie, hixChatId string) error {
 	accept := "application/json"
-	if isStream {
-		accept = "text/event-stream"
+
+	delChatBody := map[string]interface{}{
+		"0": map[string]interface{}{
+			"json": map[string]interface{}{
+				"id": hixChatId,
+			},
+		},
 	}
 
-	return client.Do(chatEndpoint, cycletls.Options{
+	bytes, err := json.Marshal(delChatBody)
+	if err != nil {
+		return err
+	}
+
+	response, err := client.Do(delChatEndpoint, cycletls.Options{
 		Timeout: 10 * 60 * 60,
 		Proxy:   config.ProxyUrl, // 在每个请求中设置代理
-		Body:    string(jsonData),
+		Body:    string(bytes),
 		Method:  "POST",
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -221,6 +231,28 @@ func makeChatRequest(client cycletls.CycleTLS, jsonData []byte, cookie string, i
 			"User-Agent":   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome",
 		},
 	}, "POST")
+
+	if err != nil {
+		return err
+	}
+	var errorResp []HixErrorResp
+	err = json.Unmarshal([]byte(response.Body), &errorResp)
+	if err != nil {
+		return err
+	} else {
+		if len(errorResp) > 0 {
+			if errorResp[0].Error.Json.Code == -32003 {
+				//return "",
+			}
+		}
+	}
+
+	var responses []CreateChatResponse
+	err = json.Unmarshal([]byte(response.Body), &responses)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func MakeStreamChatRequest(c *gin.Context, client cycletls.CycleTLS, modelName, hixChatId string, jsonData []byte, cookie string) (<-chan cycletls.SSEResponse, error) {
