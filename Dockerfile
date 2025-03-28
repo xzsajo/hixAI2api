@@ -79,13 +79,6 @@ RUN adduser -D -u 1000 hixai2apiuser && \
 # 复制二进制文件
 COPY --from=builder /app/hixai2api /hixai2api
 
-# 创建并设置数据目录权限
-RUN mkdir -p /app/hixai2api/data && \
-    chown -R hixai2apiuser:hixai2apiuser /app/hixai2api
-
-# 切换到非root用户
-USER hixai2apiuser
-
 # 配置容器
 EXPOSE 7044
 
