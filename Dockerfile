@@ -7,12 +7,26 @@ COPY ./frontend/package*.json ./frontend/
 # 安装所有依赖（包括开发依赖，因为构建工具通常是开发依赖）
 RUN cd ./frontend && npm ci
 
+# 为Node.js提供crypto polyfill
+RUN cd ./frontend && npm install --save-dev crypto-browserify
+
 # 复制前端源代码
 COPY ./frontend ./frontend
 RUN mkdir -p /app/frontend/dist
 
-# 构建前端项目
-RUN cd ./frontend && NODE_ENV=production npm run build
+# 创建一个临时polyfill文件来模拟crypto.getRandomValues
+RUN echo "const crypto = require('crypto'); \
+if (!crypto.getRandomValues) { \
+  crypto.getRandomValues = function(array) { \
+    const bytes = crypto.randomBytes(array.length); \
+    array.set(bytes); \
+    return array; \
+  }; \
+} \
+global.crypto = crypto;" > /app/frontend/crypto-polyfill.js
+
+# 使用node -r选项预加载crypto-polyfill.js
+RUN cd ./frontend && NODE_ENV=production node -r /app/frontend/crypto-polyfill.js ./node_modules/vite/bin/vite.js build
 
 # Go构建阶段：使用Alpine镜像
 FROM golang:alpine AS builder
