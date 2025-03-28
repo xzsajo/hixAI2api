@@ -57,9 +57,6 @@ RUN go mod download
 # 复制版本文件并提取版本号
 COPY ./common/constants.go ./common/constants.go
 
-# 从common/constants.go中提取版本号
-RUN grep -oP 'var Version = "\K[^"]+' ./common/constants.go > VERSION
-
 # 复制源代码
 COPY . .
 
@@ -67,7 +64,8 @@ COPY . .
 COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
 
 # 使用缓存优化和并行构建
-RUN go build -trimpath -ldflags "-s -w -X 'hixai2api/common.Version=$(cat VERSION)' -linkmode external -extldflags '-static'" -o /app/hixai2api
+RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'" -o /app/hixai2api
+
 
 # 最终运行镜像：使用Alpine
 FROM alpine:latest
