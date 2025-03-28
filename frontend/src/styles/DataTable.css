@@ -1,14 +1,21 @@
 .data-table-container {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   min-width: 100%;
   background-color: white;
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.3s ease forwards;
+  display: block;
+  box-sizing: border-box;
+  flex: 1;
+  position: relative;
+  max-width: 100%;
+  isolation: isolate;
 }
 
 @keyframes fadeInUp {
@@ -28,7 +35,7 @@
   border-spacing: 0;
   text-align: left;
   font-size: 0.95rem;
-  table-layout: fixed;
+  min-width: 100%;
 }
 
 .data-table thead {
@@ -104,6 +111,8 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  position: relative;
+  z-index: 5;
 }
 
 .edit-button,
@@ -118,6 +127,8 @@
   font-weight: 500;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
 }
 
 .edit-button {
@@ -128,8 +139,9 @@
 
 .edit-button:hover {
   background-color: rgba(0, 113, 227, 0.15);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 113, 227, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 113, 227, 0.2);
+  z-index: 2;
 }
 
 .delete-button {
@@ -140,14 +152,23 @@
 
 .delete-button:hover {
   background-color: rgba(255, 59, 48, 0.15);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(255, 59, 48, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 59, 48, 0.2);
+  z-index: 2;
+}
+
+.edit-button:hover,
+.delete-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
 }
 
 .empty-message {
   text-align: center;
   padding: 2rem !important;
   color: #86868b;
+  width: 100%;
 }
 
 /* 暗色模式 */

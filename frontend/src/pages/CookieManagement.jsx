@@ -6,9 +6,8 @@ import {
   deleteCookie,
   refreshCookieCredit,
 } from "../services/api";
-import DataTable from "../components/DataTable";
+import DataContainer from "../components/DataContainer";
 import Modal from "../components/Modal";
-import LoadingIndicator from "../components/LoadingIndicator";
 import "../styles/Management.css";
 
 const CookieManagement = () => {
@@ -214,17 +213,15 @@ const CookieManagement = () => {
 
       {error && <div className="error-message">{error}</div>}
 
-      {loading ? (
-        <LoadingIndicator text="正在加载 Cookie 数据..." />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={cookies}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          emptyMessage="暂无 Cookie 数据"
-        />
-      )}
+      <DataContainer
+        loading={loading}
+        loadingText="正在加载 Cookie 数据..."
+        columns={columns}
+        data={cookies}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        emptyMessage="暂无 Cookie 数据"
+      />
 
       <Modal
         title={isEditMode ? "编辑 Cookie" : "添加 Cookie"}

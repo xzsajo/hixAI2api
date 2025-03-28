@@ -1,11 +1,16 @@
 .management-container {
   width: 100%;
   max-width: 100%;
+  min-width: 100%;
   padding-bottom: 2rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 4rem); /* 减去内容区padding的高度 */
+  flex: 1 1 auto; /* 添加flex属性，确保容器能够扩展以填充可用空间 */
+  overflow: visible; /* 恢复为visible，允许内容正常显示，特别是悬浮元素 */
+  margin: 0; /* 确保没有外边距 */
+  padding-right: 0; /* 确保右侧没有内边距 */
 }
 
 .management-header {
@@ -47,6 +52,8 @@ button[type="submit"] {
   cursor: pointer;
   outline: none;
   border: none;
+  position: relative; /* 添加相对定位 */
+  z-index: 1; /* 增加层级，确保按钮悬浮时可见 */
 }
 
 .add-button {
@@ -56,8 +63,9 @@ button[type="submit"] {
 
 .add-button:hover {
   background-color: #0062c3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px); /* 稍微增加上浮距离 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* 增强阴影效果 */
+  z-index: 10; /* 提高z-index到更高层级 */
 }
 
 .add-button:active {
@@ -73,8 +81,9 @@ button[type="submit"] {
 
 .refresh-button:hover {
   background-color: rgba(0, 113, 227, 0.05);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px); /* 稍微增加上浮距离 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* 增强阴影效果 */
+  z-index: 10; /* 提高z-index到更高层级 */
 }
 
 .refresh-button:active {
@@ -271,4 +280,17 @@ button[type="submit"] {
   .credit-empty {
     background-color: rgba(158, 158, 158, 0.2);
   }
+}
+
+/* 修复表格容器宽度 */
+.data-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }

@@ -5,9 +5,8 @@ import {
   updateApiKey,
   deleteApiKey,
 } from "../services/api";
-import DataTable from "../components/DataTable";
+import DataContainer from "../components/DataContainer";
 import Modal from "../components/Modal";
-import LoadingIndicator from "../components/LoadingIndicator";
 import "../styles/Management.css";
 
 const ApiKeyManagement = () => {
@@ -140,17 +139,15 @@ const ApiKeyManagement = () => {
 
       {error && <div className="error-message">{error}</div>}
 
-      {loading ? (
-        <LoadingIndicator text="正在加载 API Key 数据..." />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={apiKeys}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          emptyMessage="暂无 API Key 数据"
-        />
-      )}
+      <DataContainer
+        loading={loading}
+        loadingText="正在加载 API Key 数据..."
+        columns={columns}
+        data={apiKeys}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        emptyMessage="暂无 API Key 数据"
+      />
 
       <Modal
         title={isEditMode ? "编辑 API Key" : "添加 API Key"}
