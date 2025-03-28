@@ -1,23 +1,23 @@
-FROM --platform=$BUILDPLATFORM node:16 AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:16-bullseye AS frontend-builder
 
 WORKDIR /app
-COPY ./frontend/package*.json ./frontend/
-RUN cd ./frontend && npm install
 
+# 首先只复制依赖相关文件，利用Docker缓存层
+COPY ./frontend/package*.json ./frontend/
+# 使用npm缓存加速构建
+RUN cd ./frontend && npm ci --only=production
+
+# 复制前端源代码
 COPY ./frontend ./frontend
-# 从common/constants.go中获取版本号
 RUN mkdir -p /app/frontend/dist
 
-# 在Node.js中添加crypto模块的polyfill
-RUN cd ./frontend && npm install --save-dev crypto-browserify
+# 构建前端项目
+RUN cd ./frontend && NODE_ENV=production npm run build
 
-# 构建前端项目，添加NODE_OPTIONS以提供polyfill
-RUN cd ./frontend && NODE_OPTIONS=--experimental-crypto NODE_ENV=production npm run build
-
-# 构建阶段：使用 Alpine 镜像确保 musl libc 兼容性
+# Go构建阶段：使用Alpine镜像
 FROM golang:alpine AS builder
 
-# 安装编译依赖（SQLite + CGO 必需）
+# 安装编译依赖
 RUN apk add --no-cache \
     gcc \
     musl-dev \
@@ -25,28 +25,28 @@ RUN apk add --no-cache \
     build-base \
     grep
 
-# 启用 CGO 并配置环境
+# 启用CGO并配置环境
 ENV CGO_ENABLED=1 \
     GO111MODULE=on \
     GOOS=linux
 
 WORKDIR /build
 
-# 复制依赖文件（利用 Docker 缓存层加速构建）
+# 先只复制go.mod和go.sum以利用缓存
 COPY go.mod go.sum ./
 RUN go mod download
 
-# 先复制 common/constants.go 来读取版本号
+# 复制版本文件并提取版本号
 COPY ./common/constants.go ./common/constants.go
 # 从common/constants.go中提取版本号
 RUN grep -oP 'var Version = "\K[^"]+' ./common/constants.go > VERSION
 
-# 复制其他源代码
+# 复制源代码
 COPY . .
-# 从前端构建阶段复制构建产物到正确的嵌入路径
+# 复制前端构建产物
 COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
 
-# 如果VERSION文件为空，则尝试从git获取版本号，如果仍然失败则使用默认值
+# 版本号处理逻辑
 RUN if [ ! -s VERSION ]; then \
         if [ -d .git ]; then \
             git describe --tags > VERSION || echo "v1.0.0" > VERSION; \
@@ -55,22 +55,31 @@ RUN if [ ! -s VERSION ]; then \
         fi; \
     fi
 
-# 执行构建，添加版本号
+# 使用缓存优化和并行构建
 RUN go build -trimpath -ldflags "-s -w -X 'hixai2api/common.Version=$(cat VERSION)' -linkmode external -extldflags '-static'" -o /app/hixai2api
 
-# ----------------------------
-# 运行时阶段：最小化 Alpine 镜像
+# 最终运行镜像：使用Alpine
 FROM alpine:latest
 
-# 安装运行时基础依赖
-RUN apk add --no-cache \
+# 添加非root用户
+RUN adduser -D -u 1000 appuser && \
+    apk add --no-cache \
     ca-certificates \
     tzdata
 
-# 从构建阶段复制二进制文件
+# 复制二进制文件
 COPY --from=builder /app/hixai2api /hixai2api
+
+# 创建并设置数据目录权限
+RUN mkdir -p /app/hixai2api/data && \
+    chown -R appuser:appuser /app/hixai2api
+
+# 切换到非root用户
+USER appuser
 
 # 配置容器
 EXPOSE 7044
 WORKDIR /app/hixai2api/data
+
+# 启动应用
 ENTRYPOINT ["/hixai2api"]
