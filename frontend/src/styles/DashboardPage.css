@@ -119,18 +119,18 @@
 /* 内容区样式 */
 .dashboard-content {
   flex: 1;
-  padding: 2.5rem;
-  overflow-y: scroll;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
   overflow-x: hidden;
   background-color: #ffffff;
   box-sizing: border-box;
-  border-radius: 20px 0 0 20px;
-  margin: 1.5rem 0;
-  box-shadow: -10px 0 20px rgba(0, 0, 0, 0.03);
+  border-radius: 12px 0 0 12px;
+  margin: 0.75rem 0;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.03);
   animation: fadeInSlide 0.3s ease forwards;
   will-change: transform, opacity;
   position: relative;
-  height: calc(100vh - 3rem);
+  height: calc(100vh - 1.5rem);
 }
 
 @keyframes fadeInSlide {
@@ -148,6 +148,7 @@
 .management-container {
   animation: fadeIn 0.3s ease-out;
   will-change: opacity;
+  padding-top: 0.5rem;
 }
 
 @keyframes fadeIn {
@@ -162,9 +163,9 @@
 /* 添加请求过渡动画 */
 .loading-indicator {
   text-align: center;
-  padding: 2rem;
+  padding: 1.5rem;
   color: #86868b;
-  font-size: 1rem;
+  font-size: 0.9rem;
   animation: pulseOpacity 1.5s infinite ease-in-out;
 }
 
@@ -247,12 +248,11 @@
   }
 
   .dashboard-content {
-    padding-top: 4rem;
+    padding: 3.5rem 1rem 1.5rem 1rem;
     width: 100%; /* 移动设备下占满全宽 */
     max-width: 100%;
     margin: 0;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    border-radius: 0;
   }
 }
 

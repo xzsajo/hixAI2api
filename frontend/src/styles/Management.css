@@ -2,19 +2,17 @@
   width: 100%;
   max-width: 100%;
   min-width: 100%;
-  padding-bottom: 2rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 4rem); /* 减去内容区padding的高度 */
-  flex: 1 1 auto; /* 添加flex属性，确保容器能够扩展以填充可用空间 */
-  overflow: visible; /* 恢复为visible，允许内容正常显示，特别是悬浮元素 */
-  margin: 0; /* 确保没有外边距 */
-  padding-right: 0; /* 确保右侧没有内边距 */
+  flex: 1 1 auto;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
 }
 
 .management-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,7 +23,7 @@
 
 .management-header h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 600;
   color: #1d1d1f;
   letter-spacing: -0.02em;
