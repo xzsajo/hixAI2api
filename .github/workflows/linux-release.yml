@@ -10,9 +10,11 @@ on:
       - "!*-preview*"
   workflow_dispatch:
     inputs:
-      name:
-        description: "reason"
+      reason:
+        description: "触发构建的原因"
         required: false
+        default: "手动触发构建"
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -21,52 +23,40 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Check repository URL
-        run: |
-          REPO_URL=$(git config --get remote.origin.url)
-          if [[ $REPO_URL == *"pro" ]]; then
-            exit 1
-          fi
-      - uses: actions/setup-node@v3
+
+      # 设置Node环境并构建前端
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - name: Build Frontend
         env:
           CI: ""
         run: |
           cd web
+          # 获取版本信息
           git describe --tags > VERSION
           REACT_APP_VERSION=$(git describe --tags)
+
+          # 构建前端，如果失败则创建最小的dist目录
           npm install
           npm run build || {
             echo "Warning: Frontend build failed. Creating minimal dist directory..."
             mkdir -p dist
             echo "<html><body><h1>HIX-AI-2API</h1><p>Frontend build failed during CI, but backend is available.</p></body></html>" > dist/index.html
           }
-          if [ ! -d "dist" ]; then
-            echo "Creating minimal dist directory..."
-            mkdir -p dist
-            echo "<html><body><h1>HIX-AI-2API</h1><p>Minimal placeholder.</p></body></html>" > dist/index.html
-          fi
+
+          echo "Frontend build completed. Contents of dist directory:"
           ls -la dist
           cd ..
 
-      # 确保web/dist目录存在，这是一个安全检查
-      - name: Ensure web/dist directory exists
-        run: |
-          # 只检查目录是否存在，如果不存在才创建
-          if [ ! -d "web/dist" ]; then
-            echo "Creating minimal web/dist structure for embedding"
-            mkdir -p web/dist
-            echo "<html><body><h1>HIX-AI-2API</h1></body></html>" > web/dist/index.html
-          fi
-          echo "Contents of web/dist:"
-          ls -la web/dist
-
-      - name: Set up Go
+      # 设置Go环境并构建后端
+      - name: Setup Go
         uses: actions/setup-go@v3
         with:
           go-version: ">=1.18.0"
+
       - name: Build Backend (amd64)
         run: |
           go mod download
@@ -78,6 +68,7 @@ jobs:
           sudo apt-get install gcc-aarch64-linux-gnu
           CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -extldflags '-static'" -o hixai2api-arm64
 
+      # 发布版本
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
