@@ -788,16 +788,14 @@ func OpenaiModels(c *gin.Context) {
 
 	// 提取两种状态的credit
 	var standardCredit, advancedCredit int
-	hasStandard := false
+	//hasStandard := false
 	hasAdvanced := false
 	for _, cookie := range maxCookies {
-		if !cookie.IsActiveSub {
-			standardCredit = cookie.Credit
-			hasStandard = true
-		} else {
-			advancedCredit = cookie.AdvancedCredit
+		if cookie.IsActiveSub {
 			hasAdvanced = true
 		}
+		advancedCredit = cookie.AdvancedCredit
+		standardCredit = cookie.Credit
 	}
 
 	// 遍历modelRegistry，收集符合条件的模型
@@ -806,7 +804,7 @@ func OpenaiModels(c *gin.Context) {
 		credit := info.Credit
 		modelType := info.Type
 
-		if modelType == "STANDARD" && hasStandard && standardCredit >= credit {
+		if modelType == "STANDARD" && standardCredit >= credit {
 			modelsResp = append(modelsResp, modelName)
 		}
 		if modelType == "ADVANCED" && hasAdvanced && advancedCredit >= credit {

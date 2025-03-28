@@ -63,6 +63,37 @@ const CookieManagement = () => {
         );
       },
     },
+    {
+      key: "advancedCredit",
+      title: "高级额度",
+      sortable: true,
+      render: (row) => {
+        const advancedCredit = row.advancedCredit || 0;
+        let statusClass = "";
+        let statusText = "";
+
+        if (advancedCredit < 100 && advancedCredit > 0) {
+          statusClass = "credit-low";
+          statusText = "较少";
+        } else if (advancedCredit >= 100 && advancedCredit < 200) {
+          statusClass = "credit-medium";
+          statusText = "较多";
+        } else if (advancedCredit >= 200) {
+          statusClass = "credit-high";
+          statusText = "充足";
+        } else {
+          statusClass = "credit-empty";
+          statusText = "无";
+        }
+
+        return (
+          <div className="credit-container">
+            <span className="credit-value">{advancedCredit}</span>
+            <span className={`credit-status ${statusClass}`}>{statusText}</span>
+          </div>
+        );
+      },
+    },
     { key: "remark", title: "备注", sortable: false },
     { key: "createTime", title: "创建时间", sortable: true },
   ];

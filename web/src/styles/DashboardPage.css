@@ -253,11 +253,16 @@
     max-width: 100%;
     margin: 0;
     border-radius: 0;
+    background-color: #1d1d1f;
   }
 }
 
 /* 暗色模式 */
 @media (prefers-color-scheme: dark) {
+  .dashboard-container {
+    background-color: #1d1d1f;
+  }
+
   .sidebar {
     background-color: #1d1d1f;
     border-right-color: #333;
@@ -303,6 +308,9 @@
 
   .dashboard-content {
     background-color: #1d1d1f;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
+    margin: 0.75rem 0;
+    border-radius: 12px 0 0 12px;
   }
 
   .mobile-menu-button {

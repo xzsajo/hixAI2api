@@ -206,11 +206,12 @@ func GetAllCookie(c *gin.Context) {
 	if len(cookies) > 0 {
 		for _, k := range cookies {
 			resp = append(resp, model.CookieResp{
-				Id:         k.Id,
-				Cookie:     k.Cookie,
-				Credit:     k.Credit,
-				Remark:     k.Remark,
-				CreateTime: k.CreateTime.Format("2006-01-02 15:04:05"),
+				Id:             k.Id,
+				Cookie:         k.Cookie,
+				Credit:         k.Credit,
+				AdvancedCredit: k.AdvancedCredit,
+				Remark:         k.Remark,
+				CreateTime:     k.CreateTime.Format("2006-01-02 15:04:05"),
 			})
 		}
 	}

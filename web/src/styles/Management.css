@@ -221,6 +221,15 @@ button[type="submit"] {
   .form-group textarea:focus {
     border-color: #2997ff;
   }
+
+  /* 确保表格相关元素在深色模式下有正确的背景色 */
+  .management-container {
+    background-color: #1d1d1f;
+  }
+
+  .data-table-container {
+    background-color: #2d2d2f;
+  }
 }
 
 /* 额度样式 */

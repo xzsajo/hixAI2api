@@ -52,8 +52,10 @@ type CookieResp struct {
 	Id string `json:"id"`
 	// Cookie cookie
 	Cookie string `json:"cookie"`
-	// Credit 额度
+	// Credit 标准额度
 	Credit int `json:"credit"`
+	// Credit 高级额度
+	AdvancedCredit int `json:"advancedCredit"`
 	// Remark 备注
 	Remark string `json:"remark"`
 	// CreateTime 创建时间

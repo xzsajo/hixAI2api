@@ -24,6 +24,7 @@ _觉得有点意思的话 别忘了点个 ⭐_
 - [x] 支持**新闻媒体搜索**,在模型名后添加`-news`即可(如:`deepseek-r1-news`)
 - [x] 支持**学术数据库搜索**,在模型名后添加`-academic`即可(如:`deepseek-r1-academic`)
 - [x] 支持识别**图片**/**文件**多轮对话
+- [x] 支持面板配置`API-KEY`及`cookie`,详情查看[进阶配置](#进阶配置)
 - [x] 支持自定义请求头校验值(Authorization),详情查看[配置 API-KEY](#配置API-KEY)
 - [x] 支持 cookie 池,详情查看[配置 COOKIE](#配置COOKIE)
 - [x] 支持请求失败自动切换 cookie 重试(需配置 cookie 池)
@@ -200,10 +201,16 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 
 ### 配置 API-KEY
 
+右上角添加API-KEY
 
-其中``为环境变量`BACKEND_SECRET`的值。
+
+![img.png](docs/img10.png)
 
 ### 配置 COOKIE
+
+右上角添加Cookie
+
+![img.png](docs/img9.png)
 
 ### 获取 cookie
 
