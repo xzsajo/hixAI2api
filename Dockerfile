@@ -66,15 +66,6 @@ COPY . .
 # 复制前端构建产物
 COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
 
-# 版本号处理逻辑
-RUN if [ ! -s VERSION ]; then \
-        if [ -d .git ]; then \
-            git describe --tags > VERSION || echo "v1.0.0" > VERSION; \
-        else \
-            echo "v1.0.0" > VERSION; \
-        fi; \
-    fi
-
 # 使用缓存优化和并行构建
 RUN go build -trimpath -ldflags "-s -w -X 'hixai2api/common.Version=$(cat VERSION)' -linkmode external -extldflags '-static'" -o /app/hixai2api
 
