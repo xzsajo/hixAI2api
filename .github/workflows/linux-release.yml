@@ -37,8 +37,22 @@ jobs:
           cd web
           git describe --tags > VERSION
           REACT_APP_VERSION=$(git describe --tags)
-          chmod u+x ./build.sh && ./build.sh
+          npm install
+          npm run build
+          if [ ! -d "dist" ]; then
+            echo "Error: dist directory was not created by build script"
+            exit 1
+          fi
+          ls -la dist
           cd ..
+
+      - name: Ensure web/dist directory exists
+        run: |
+          if [ ! -d "web/dist" ]; then
+            echo "Creating minimal web/dist structure for embedding"
+            mkdir -p web/dist
+            echo "<html><body><h1>Placeholder</h1></body></html>" > web/dist/index.html
+          fi
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
