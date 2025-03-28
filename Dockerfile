@@ -19,7 +19,8 @@ RUN apk add --no-cache \
     gcc \
     musl-dev \
     sqlite-dev \
-    build-base
+    build-base \
+    grep
 
 # 启用 CGO 并配置环境
 ENV CGO_ENABLED=1 \
@@ -32,16 +33,23 @@ WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 
-# 复制源码
+# 先复制 common/constants.go 来读取版本号
+COPY ./common/constants.go ./common/constants.go
+# 从common/constants.go中提取版本号
+RUN grep -oP 'var Version = "\K[^"]+' ./common/constants.go > VERSION
+
+# 复制其他源代码
 COPY . .
 # 从前端构建阶段复制构建产物到正确的嵌入路径
 COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
 
-# 使用git tag作为版本号，如果没有则使用common/constants.go中的默认值
-RUN if [ -d .git ]; then \
-        git describe --tags > VERSION || echo "v1.3.1" > VERSION; \
-    else \
-        echo "v1.3.1" > VERSION; \
+# 如果VERSION文件为空，则尝试从git获取版本号，如果仍然失败则使用默认值
+RUN if [ ! -s VERSION ]; then \
+        if [ -d .git ]; then \
+            git describe --tags > VERSION || echo "v1.0.0" > VERSION; \
+        else \
+            echo "v1.0.0" > VERSION; \
+        fi; \
     fi
 
 # 执行构建，添加版本号
