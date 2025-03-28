@@ -12,6 +12,5 @@ dist
 /frontend/node_modules
 cmd.md
 .env
-/one-api
 temp
 .DS_Store

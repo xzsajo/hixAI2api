@@ -194,22 +194,15 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 
 ## 进阶配置
 
+> 部署后打开`http://<ip>:<port> 即可登录后台管理界面,管理密钥为环境变量`BACKEND_SECRET`的值。
+
+![img.png](docs/img8.png)
+
 ### 配置 API-KEY
 
-#### curl 示例
 
-```curl
-curl -X 'PUT' \
-  'http://127.0.0.1:7044/api/key' \
-  -H 'accept: application/json' \
-  -H 'Authorization: 123456' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "apiKey": "sk-******"
-}'
-```
 
-其中`Authorization`为环境变量`BACKEND_SECRET`的值。
+其中``为环境变量`BACKEND_SECRET`的值。
 
 ### 配置 COOKIE
 
