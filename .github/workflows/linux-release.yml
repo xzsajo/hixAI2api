@@ -76,7 +76,7 @@ jobs:
           files: |
             hixai2api
             hixai2api-arm64
-          draft: true
+          draft: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
