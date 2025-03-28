@@ -9,7 +9,7 @@ logs
 data
 dist
 /web/node_modules
-/frontend/node_modules
+/web/node_modules
 cmd.md
 .env
 temp

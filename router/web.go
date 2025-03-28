@@ -15,9 +15,9 @@ import (
 
 func SetWebRouter(router *gin.Engine, buildFS embed.FS) {
 	// 尝试从嵌入的文件系统中读取前端首页文件
-	indexPageData, err := buildFS.ReadFile("frontend/dist/index.html")
+	indexPageData, err := buildFS.ReadFile("web/dist/index.html")
 	if err != nil {
-		logger.Errorf(nil, "Failed to read frontend index.html: %s", err.Error())
+		logger.Errorf(nil, "Failed to read web index.html: %s", err.Error())
 		logger.SysLog("Frontend will not be available!")
 		return
 	}
@@ -25,7 +25,7 @@ func SetWebRouter(router *gin.Engine, buildFS embed.FS) {
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
 	//router.Use(middleware.GlobalWebRateLimit())
 	router.Use(middleware.Cache())
-	router.Use(static.Serve("/", common.EmbedFolder(buildFS, "frontend/dist")))
+	router.Use(static.Serve("/", common.EmbedFolder(buildFS, "web/dist")))
 
 	// 处理所有非API路由，将它们重定向到前端应用
 	router.NoRoute(func(c *gin.Context) {

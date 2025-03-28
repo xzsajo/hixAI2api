@@ -3,18 +3,18 @@ FROM --platform=$BUILDPLATFORM node:16-bullseye AS frontend-builder
 WORKDIR /app
 
 # 首先只复制依赖相关文件，利用Docker缓存层
-COPY ./frontend/package*.json ./frontend/
+COPY web/package*.json ./web/
 
 # 安装所有依赖（包括开发依赖，因为构建工具通常是开发依赖）
-RUN cd ./frontend && npm ci
+RUN cd ./web && npm ci
 
 # 为Node.js提供crypto polyfill
-RUN cd ./frontend && npm install --save-dev crypto-browserify
+RUN cd ./web && npm install --save-dev crypto-browserify
 
 # 复制前端源代码
-COPY ./frontend ./frontend
+COPY web ./web
 
-RUN mkdir -p /app/frontend/dist
+RUN mkdir -p /app/web/dist
 
 # 创建一个临时polyfill文件来模拟crypto.getRandomValues
 # 注意：这里将文件扩展名改为.cjs，使其被视为CommonJS模块
@@ -26,10 +26,10 @@ if (!crypto.getRandomValues) { \
     return array; \
   }; \
 } \
-global.crypto = crypto;" > /app/frontend/crypto-polyfill.cjs
+global.crypto = crypto;" > /app/web/crypto-polyfill.cjs
 
 # 使用node -r选项预加载crypto-polyfill.cjs
-RUN cd ./frontend && NODE_ENV=production node -r /app/frontend/crypto-polyfill.cjs ./node_modules/vite/bin/vite.js build
+RUN cd ./web && NODE_ENV=production node -r /app/web/crypto-polyfill.cjs ./node_modules/vite/bin/vite.js build
 
 # Go构建阶段：使用Alpine镜像
 FROM golang:alpine AS builder
@@ -61,7 +61,7 @@ COPY ./common/constants.go ./common/constants.go
 COPY . .
 
 # 复制前端构建产物
-COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
+COPY --from=frontend-builder /app/web/dist /build/web/dist
 
 # 使用缓存优化和并行构建
 RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'" -o /app/hixai2api
