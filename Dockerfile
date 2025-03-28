@@ -4,6 +4,7 @@ WORKDIR /app
 
 # 首先只复制依赖相关文件，利用Docker缓存层
 COPY ./frontend/package*.json ./frontend/
+
 # 安装所有依赖（包括开发依赖，因为构建工具通常是开发依赖）
 RUN cd ./frontend && npm ci
 
@@ -12,9 +13,11 @@ RUN cd ./frontend && npm install --save-dev crypto-browserify
 
 # 复制前端源代码
 COPY ./frontend ./frontend
+
 RUN mkdir -p /app/frontend/dist
 
 # 创建一个临时polyfill文件来模拟crypto.getRandomValues
+# 注意：这里将文件扩展名改为.cjs，使其被视为CommonJS模块
 RUN echo "const crypto = require('crypto'); \
 if (!crypto.getRandomValues) { \
   crypto.getRandomValues = function(array) { \
@@ -23,10 +26,10 @@ if (!crypto.getRandomValues) { \
     return array; \
   }; \
 } \
-global.crypto = crypto;" > /app/frontend/crypto-polyfill.js
+global.crypto = crypto;" > /app/frontend/crypto-polyfill.cjs
 
-# 使用node -r选项预加载crypto-polyfill.js
-RUN cd ./frontend && NODE_ENV=production node -r /app/frontend/crypto-polyfill.js ./node_modules/vite/bin/vite.js build
+# 使用node -r选项预加载crypto-polyfill.cjs
+RUN cd ./frontend && NODE_ENV=production node -r /app/frontend/crypto-polyfill.cjs ./node_modules/vite/bin/vite.js build
 
 # Go构建阶段：使用Alpine镜像
 FROM golang:alpine AS builder
@@ -48,15 +51,18 @@ WORKDIR /build
 
 # 先只复制go.mod和go.sum以利用缓存
 COPY go.mod go.sum ./
+
 RUN go mod download
 
 # 复制版本文件并提取版本号
 COPY ./common/constants.go ./common/constants.go
+
 # 从common/constants.go中提取版本号
 RUN grep -oP 'var Version = "\K[^"]+' ./common/constants.go > VERSION
 
 # 复制源代码
 COPY . .
+
 # 复制前端构建产物
 COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
 
@@ -93,6 +99,7 @@ USER appuser
 
 # 配置容器
 EXPOSE 7044
+
 WORKDIR /app/hixai2api/data
 
 # 健康检查
