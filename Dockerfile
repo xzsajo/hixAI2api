@@ -8,8 +8,11 @@ COPY ./frontend ./frontend
 # 从common/constants.go中获取版本号
 RUN mkdir -p /app/frontend/dist
 
-# 构建前端项目
-RUN cd ./frontend && npm run build
+# 在Node.js中添加crypto模块的polyfill
+RUN cd ./frontend && npm install --save-dev crypto-browserify
+
+# 构建前端项目，添加NODE_OPTIONS以提供polyfill
+RUN cd ./frontend && NODE_OPTIONS=--experimental-crypto NODE_ENV=production npm run build
 
 # 构建阶段：使用 Alpine 镜像确保 musl libc 兼容性
 FROM golang:alpine AS builder
