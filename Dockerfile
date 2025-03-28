@@ -4,8 +4,8 @@ WORKDIR /app
 
 # 首先只复制依赖相关文件，利用Docker缓存层
 COPY ./frontend/package*.json ./frontend/
-# 使用npm缓存加速构建
-RUN cd ./frontend && npm ci --only=production
+# 安装所有依赖（包括开发依赖，因为构建工具通常是开发依赖）
+RUN cd ./frontend && npm ci
 
 # 复制前端源代码
 COPY ./frontend ./frontend
@@ -80,6 +80,9 @@ USER appuser
 # 配置容器
 EXPOSE 7044
 WORKDIR /app/hixai2api/data
+
+# 健康检查
+#HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD wget -q --spider http://localhost:7044/swagger/index.html || exit 1
 
 # 启动应用
 ENTRYPOINT ["/hixai2api"]
