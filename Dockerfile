@@ -71,7 +71,7 @@ RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'"
 FROM alpine:latest
 
 # 添加非root用户
-RUN adduser -D -u 1000 appuser && \
+RUN adduser -D -u 1000 hixai2apiuser && \
     apk add --no-cache \
     ca-certificates \
     tzdata
@@ -81,10 +81,10 @@ COPY --from=builder /app/hixai2api /hixai2api
 
 # 创建并设置数据目录权限
 RUN mkdir -p /app/hixai2api/data && \
-    chown -R appuser:appuser /app/hixai2api
+    chown -R hixai2apiuser:hixai2apiuser /app/hixai2api
 
 # 切换到非root用户
-USER appuser
+USER hixai2apiuser
 
 # 配置容器
 EXPOSE 7044
