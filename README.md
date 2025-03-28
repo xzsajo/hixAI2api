@@ -215,26 +215,11 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 ### 获取 cookie
 
 1. 打开[HixAi](https://hix.ai/home)
-1. 打开**F12**开发者工具
-1. 进行一次对话
-1. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需 cookie 值(整个 Cookie 的值也可以)
+2. 打开**F12**开发者工具
+3. 进行一次对话
+4. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需 cookie 值(整个 Cookie 的值也可以)
 
 <span><img src="docs/img6.png" width="800"/></span>
-
-#### curl 示例
-
-```curl
-curl -X 'PUT' \
-  'http://127.0.0.1:7044/api/cookie' \
-  -H 'accept: application/json' \
-  -H 'Authorization: 123456' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "cookie": "user_group=**************cdi6dYqzEUfi_DJOJcg"
-}'
-```
-
-其中`Authorization`为环境变量`BACKEND_SECRET`的值。
 
 ## 支持模型及额度消耗
 
