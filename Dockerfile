@@ -1,3 +1,16 @@
+FROM --platform=$BUILDPLATFORM node:16 AS frontend-builder
+
+WORKDIR /app
+COPY ./frontend/package*.json ./frontend/
+RUN cd ./frontend && npm install
+
+COPY ./frontend ./frontend
+# 从common/constants.go中获取版本号
+RUN mkdir -p /app/frontend/dist
+
+# 构建前端项目
+RUN cd ./frontend && npm run build
+
 # 构建阶段：使用 Alpine 镜像确保 musl libc 兼容性
 FROM golang:alpine AS builder
 
@@ -5,7 +18,8 @@ FROM golang:alpine AS builder
 RUN apk add --no-cache \
     gcc \
     musl-dev \
-    sqlite-dev
+    sqlite-dev \
+    build-base
 
 # 启用 CGO 并配置环境
 ENV CGO_ENABLED=1 \
@@ -18,9 +32,20 @@ WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 
-# 复制源码并静态编译
+# 复制源码
 COPY . .
-RUN go build -trimpath -ldflags "-s -w -linkmode external -extldflags '-static'" -o /app/hixai2api
+# 从前端构建阶段复制构建产物到正确的嵌入路径
+COPY --from=frontend-builder /app/frontend/dist /build/frontend/dist
+
+# 使用git tag作为版本号，如果没有则使用common/constants.go中的默认值
+RUN if [ -d .git ]; then \
+        git describe --tags > VERSION || echo "v1.3.1" > VERSION; \
+    else \
+        echo "v1.3.1" > VERSION; \
+    fi
+
+# 执行构建，添加版本号
+RUN go build -trimpath -ldflags "-s -w -X 'hixai2api/common.Version=$(cat VERSION)' -linkmode external -extldflags '-static'" -o /app/hixai2api
 
 # ----------------------------
 # 运行时阶段：最小化 Alpine 镜像

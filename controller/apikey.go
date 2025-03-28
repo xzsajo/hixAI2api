@@ -1,22 +1,24 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"hixai2api/common"
 	logger "hixai2api/common/loggger"
 	"hixai2api/database"
 	"hixai2api/model"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
+// AuthVerify @Summary 验证后台管理密钥
+// @Description 验证后台管理密钥
+// @Tags 授权
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authorization BACKEND_SECRET"
+// @Router /api/auth/verify [post]
 func AuthVerify(c *gin.Context) {
-
-	var req model.AuthVerifyReq
-	if err := c.BindJSON(&req); err != nil {
-		logger.Errorf(c.Request.Context(), err.Error())
-		common.SendResponse(c, http.StatusUnauthorized, 401, "unauthorized", "")
-		return
-	}
+	// 中间件已经验证了Authorization头，如果代码执行到这里，说明验证已通过
 	common.SendResponse(c, http.StatusOK, 0, "success", "")
 	return
 }
@@ -163,6 +165,7 @@ func GetAllApiKey(c *gin.Context) {
 			resp = append(resp, model.ApiKeyResp{
 				Id:         k.Id,
 				ApiKey:     k.ApiKey,
+				Remark:     k.Remark,
 				CreateTime: k.CreateTime.Format("2006-01-02 15:04:05"),
 			})
 		}

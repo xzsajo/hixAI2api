@@ -2,27 +2,36 @@ package router
 
 import (
 	"embed"
-	"fmt"
-	"github.com/gin-contrib/gzip"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
 	"hixai2api/common"
+	logger "hixai2api/common/loggger"
 	"hixai2api/middleware"
 	"net/http"
 	"strings"
+
+	"github.com/gin-contrib/gzip"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 )
 
 func SetWebRouter(router *gin.Engine, buildFS embed.FS) {
-	indexPageData, _ := buildFS.ReadFile(fmt.Sprintf("web/build/index.html"))
+	// 尝试从嵌入的文件系统中读取前端首页文件
+	indexPageData, err := buildFS.ReadFile("frontend/dist/index.html")
+	if err != nil {
+		logger.Errorf(nil, "Failed to read frontend index.html: %s", err.Error())
+		logger.SysLog("Frontend will not be available!")
+		return
+	}
+
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
 	//router.Use(middleware.GlobalWebRateLimit())
 	router.Use(middleware.Cache())
-	router.Use(static.Serve("/", common.EmbedFolder(buildFS, fmt.Sprintf("web/build"))))
+	router.Use(static.Serve("/", common.EmbedFolder(buildFS, "frontend/dist")))
 
+	// 处理所有非API路由，将它们重定向到前端应用
 	router.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 
-		// 处理 API 请求
+		// 处理 API 请求，让它们返回404
 		if strings.HasPrefix(path, "/v1") || strings.HasPrefix(path, "/api") {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "API endpoint not found",
@@ -39,7 +48,7 @@ func SetWebRouter(router *gin.Engine, buildFS embed.FS) {
 			return
 		}
 
-		// 处理前端路由请求
+		// 所有其他请求都返回前端入口页面，让前端路由处理
 		c.Header("Cache-Control", "no-cache")
 		c.Data(http.StatusOK, "text/html; charset=utf-8", indexPageData)
 	})
