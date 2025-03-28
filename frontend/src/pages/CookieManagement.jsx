@@ -193,6 +193,15 @@ const CookieManagement = () => {
     }
   };
 
+  // 处理键盘事件
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      // 如果按下回车且没有同时按下shift键，则提交表单
+      e.preventDefault();
+      handleFormSubmit();
+    }
+  };
+
   return (
     <div className="management-container">
       <div className="management-header">
@@ -240,6 +249,7 @@ const CookieManagement = () => {
               name="cookie"
               value={currentCookie.cookie}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="请输入Cookie"
               rows={6}
             />
@@ -256,6 +266,7 @@ const CookieManagement = () => {
               name="remark"
               value={currentCookie.remark}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="请输入备注（可选）"
             />
           </div>

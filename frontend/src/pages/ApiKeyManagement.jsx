@@ -128,6 +128,14 @@ const ApiKeyManagement = () => {
     }
   };
 
+  // 处理键盘事件
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleFormSubmit();
+    }
+  };
+
   return (
     <div className="management-container">
       <div className="management-header">
@@ -167,6 +175,7 @@ const ApiKeyManagement = () => {
               name="apiKey"
               value={currentApiKey.apiKey}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="请输入API Key"
             />
           </div>
@@ -179,6 +188,7 @@ const ApiKeyManagement = () => {
               name="remark"
               value={currentApiKey.remark}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="请输入备注（可选）"
             />
           </div>
