@@ -2,15 +2,17 @@ package router
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	_ "hixai2api/docs"
 
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/gin-gonic/gin"
+
 	"hixai2api/common/config"
 	"hixai2api/controller"
 	"hixai2api/middleware"
 	"strings"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetApiRouter(router *gin.Engine) {
@@ -23,7 +25,7 @@ func SetApiRouter(router *gin.Engine) {
 	}
 
 	// *有静态资源时注释此行
-	router.GET("/")
+	//router.GET("/")
 
 	v1Router := router.Group(fmt.Sprintf("%s/v1", ProcessPath(config.RoutePrefix)))
 	v1Router.Use(middleware.OpenAIAuth())
@@ -34,7 +36,7 @@ func SetApiRouter(router *gin.Engine) {
 	if config.BackendApiEnable == 1 {
 		apiRouter := router.Group(fmt.Sprintf("/api"))
 		apiRouter.Use(middleware.BackendAuth())
-		//apiRouter.POST("/auth/verify", controller.AuthVerify)
+		apiRouter.POST("/auth/verify", controller.AuthVerify)
 		apiRouter.PUT("/key", controller.SaveApiKey)
 		apiRouter.DELETE("/key/:id", controller.DeleteApiKey)
 		apiRouter.POST("/key/update", controller.UpdateApiKey)

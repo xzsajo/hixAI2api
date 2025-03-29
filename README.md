@@ -12,8 +12,8 @@ _觉得有点意思的话 别忘了点个 ⭐_
     <span style="text-decoration: none; font-size: 12px; color: #0088cc; vertical-align: middle;">Telegram 交流群</span>
 </a>
 
-<sup><i>(原`coze-discord-proxy`交流群, 此项目仍可进此群**交流** / **反馈bug**)</i></sup>
-<sup><i>(群内提供公益API、AI机器人)</i></sup>
+<sup><i>(原`coze-discord-proxy`交流群, 此项目仍可进此群**交流** / **反馈 bug**)</i></sup>
+<sup><i>(群内提供公益 API、AI 机器人)</i></sup>
 
 </div>
 
@@ -24,13 +24,14 @@ _觉得有点意思的话 别忘了点个 ⭐_
 - [x] 支持**新闻媒体搜索**,在模型名后添加`-news`即可(如:`deepseek-r1-news`)
 - [x] 支持**学术数据库搜索**,在模型名后添加`-academic`即可(如:`deepseek-r1-academic`)
 - [x] 支持识别**图片**/**文件**多轮对话
-- [x] 支持自定义请求头校验值(Authorization),详情查看[配置API-KEY](#配置API-KEY)
-- [x] 支持cookie池,详情查看[配置COOKIE](#配置COOKIE)
-- [x] 支持请求失败自动切换cookie重试(需配置cookie池)
-- [x] 支持定时更新Cookie剩余Credit额度
+- [x] 支持面板配置`API-KEY`及`cookie`,详情查看[进阶配置](#进阶配置)
+- [x] 支持自定义请求头校验值(Authorization),详情查看[配置 API-KEY](#配置API-KEY)
+- [x] 支持 cookie 池,详情查看[配置 COOKIE](#配置COOKIE)
+- [x] 支持请求失败自动切换 cookie 重试(需配置 cookie 池)
+- [x] 支持定时更新 Cookie 剩余 Credit 额度
 - [x] 可配置代理请求(环境变量`PROXY_URL`)
 
-> ❗︎由于历史对话存储在HixAI的服务上,所以在配置了多`Cookie`下会存在上下文接不上的情况,而且多轮对话下不支持**重新生成回答**、**自定义上下文**、**自定义system/developer角色Content**。
+> ❗︎ 由于历史对话存储在 HixAI 的服务上,所以在配置了多`Cookie`下会存在上下文接不上的情况,而且多轮对话下不支持**重新生成回答**、**自定义上下文**、**自定义 system/developer 角色 Content**。
 
 ### 接口文档:
 
@@ -46,15 +47,15 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 略
 
-## 如何集成NextChat
+## 如何集成 NextChat
 
 填 接口地址(ip:端口/域名) 及 [API-KEY](#配置API-KEY),其它的随便填随便选。
 
-> 如果自己没有搭建NextChat面板,这里有个已经搭建好的可以使用 [NeatChat](https://ai.aytsao.cn/)
+> 如果自己没有搭建 NextChat 面板,这里有个已经搭建好的可以使用 [NeatChat](https://ai.aytsao.cn/)
 
 <span><img src="docs/img5.png" width="800"/></span>
 
-## 如何集成one-api
+## 如何集成 one-api
 
 填 `BaseURL`(ip:端口/域名) 及 密钥即[API-KEY](#配置API-KEY),其它的随便填随便选。
 
@@ -62,9 +63,9 @@ _觉得有点意思的话 别忘了点个 ⭐_
 
 ## 部署
 
-> 如果配置了`MYSQL_DSN`环境变量即使用了`MySql`数据库服务,请参考如下命令新建该项目所需的库。如果想配置`MYSQL_DSN`但对部署`MySql`服务不熟悉可以参考[部署到 Zeabur中的Zeabur部署Mysql](#部署到第三方平台)。
+> 如果配置了`MYSQL_DSN`环境变量即使用了`MySql`数据库服务,请参考如下命令新建该项目所需的库。如果想配置`MYSQL_DSN`但对部署`MySql`服务不熟悉可以参考[部署到 Zeabur 中的 Zeabur 部署 Mysql](#部署到第三方平台)。
 
-#### 创建数据库示例sql命令
+#### 创建数据库示例 sql 命令
 
 ```sql
 CREATE DATABASE hix_ai_2_api CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
@@ -78,7 +79,7 @@ docker-compose pull && docker-compose up -d
 
 #### docker-compose.yml
 
-> 不配置`MYSQL_DSN`时,services中的`db`服务可去掉。项目会采用Sqlite。
+> 不配置`MYSQL_DSN`时,services 中的`db`服务可去掉。项目会采用 Sqlite。
 
 ```docker
 version: '3.4'
@@ -140,12 +141,12 @@ deanxv/hixai2api
 > Zeabur 的服务器在国外,自动解决了网络的问题,~~同时免费的额度也足够个人使用~~
 
 1. 首先 **fork** 一份代码。
-2. 进入 [Zeabur](https://zeabur.com?referralCode=deanxv),使用github登录,进入控制台。
+2. 进入 [Zeabur](https://zeabur.com?referralCode=deanxv),使用 github 登录,进入控制台。
 3. 在 Service -> Add Service,选择 Git（第一次使用需要先授权）,选择你 fork 的仓库。
 4. Deploy 会自动开始,先取消。
 5. 添加环境变量
 
-   `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` MYSQL连接信息
+   `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` MYSQL 连接信息
 
    `BACKEND_SECRET=123456` [可选] 后台管理接口密钥
 
@@ -155,11 +156,11 @@ deanxv/hixai2api
 
 </div>
 
-#### Zeabur部署Mysql
+#### Zeabur 部署 Mysql
 
 <span><img src="docs/img7.png" width="400"/></span>
 
-按照上图创建MySql服务后,在环境变量`MYSQL_DSN`中填写对应的连接信息。
+按照上图创建 MySql 服务后,在环境变量`MYSQL_DSN`中填写对应的连接信息。
 
 `Username:Password@tcp(Host:Port)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai`
 
@@ -182,126 +183,103 @@ Render 可以直接部署 docker 镜像,不需要 fork 仓库：[Render](https:/
 
 ### 环境变量
 
-1. `PORT=7044`  [可选]端口,默认为7044
-2. `DEBUG=true`  [可选]DEBUG模式,可打印更多信息[true:打开、false:关闭]
+1. `PORT=7044` [可选]端口,默认为 7044
+2. `DEBUG=true` [可选]DEBUG 模式,可打印更多信息[true:打开、false:关闭]
 3. `MYSQL_DSN=hix-ai-2-api:123456@tcp(host:3306)/hix_ai_2_api?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai` # [可选] 设置之后将使用指定数据库而非 SQLite，请使用 MySQL。
-4. `BACKEND_SECRET=123456`  [可选]后台管理接口密钥
-5. `BACKEND_API_ENABLE=1`  [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
-6. `CHAT_MAX_DAYS=7`  [可选]对话记录保留天数(默认:-1[永久保留])
-7. `ROUTE_PREFIX=hf`  [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
-8. `PROXY_URL=http://127.0.0.1:7897`  [可选]代理
-9. `SWAGGER_ENABLE=1`  [可选]是否启用Swagger接口文档(默认:1)[0:关闭,1:开启]
-
-### cookie获取方式
+4. `BACKEND_SECRET=123456` [可选]后台管理接口密钥
+5. `BACKEND_API_ENABLE=1` [可选]后台管理接口开关(默认:1)[0:关闭,1:开启]
+6. `CHAT_MAX_DAYS=7` [可选]对话记录保留天数(默认:-1[永久保留])
+7. `ROUTE_PREFIX=hf` [可选]路由前缀,默认为空,添加该变量后的接口示例:`/hf/v1/chat/completions`
+8. `PROXY_URL=http://127.0.0.1:7897` [可选]代理
+9. `SWAGGER_ENABLE=1` [可选]是否启用 Swagger 接口文档(默认:1)[0:关闭,1:开启]
 
 ## 进阶配置
 
-### 配置API-KEY
+> 部署后打开`http://<ip>:<port>`即可登录后台管理界面,管理密钥为环境变量`BACKEND_SECRET`的值。
 
-#### curl示例
+![img.png](docs/img8.png)
 
-```curl
-curl -X 'PUT' \
-  'http://127.0.0.1:7044/api/key' \
-  -H 'accept: application/json' \
-  -H 'Authorization: 123456' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "apiKey": "sk-******"
-}'
-```
+### 配置 API-KEY
 
-其中`Authorization`为环境变量`BACKEND_SECRET`的值。
+右上角添加API-KEY
 
-### 配置COOKIE
 
-### 获取cookie
+![img.png](docs/img10.png)
+
+### 配置 COOKIE
+
+右上角添加Cookie
+
+![img.png](docs/img9.png)
+
+### 获取 cookie
 
 1. 打开[HixAi](https://hix.ai/home)
-1. 打开**F12**开发者工具
+2. 打开**F12**开发者工具
 3. 进行一次对话
-4. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需cookie值(整个Cookie的值也可以)
+4. 如下图所示,右侧`chat`请求中请求头`Cookie`中的蓝色高亮`__Secure-next-auth.session-token`的值(红色高亮)即为所需 cookie 值(整个 Cookie 的值也可以)
 
 <span><img src="docs/img6.png" width="800"/></span>
 
-#### curl示例
-
-```curl
-curl -X 'PUT' \
-  'http://127.0.0.1:7044/api/cookie' \
-  -H 'accept: application/json' \
-  -H 'Authorization: 123456' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "cookie": "user_group=**************cdi6dYqzEUfi_DJOJcg"
-}'
-```
-
-其中`Authorization`为环境变量`BACKEND_SECRET`的值。
-
 ## 支持模型及额度消耗
 
-| 模型名称                   | 消耗标准额度 | 消耗高级额度 | 类型                                       |
-|------------------------|--------|--------|------------------------------------------|
-| deepseek-r1            | 1      | 0      | 📘 <span style="color: green;">标准</span> |
-| deepseek-v3            | 1      | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-7-sonnet      | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
-| claude-3-5-haiku       | 10     | 0      | 📘 <span style="color: green;">标准</span> |
-| openai-o3-mini         | 200    | 0      | 📘 <span style="color: green;">标准</span> |
-| openai-o1              | 0      | 40     | 🔥 <span style="color: red;">高级</span>   |
-| openai-o1-mini         | 200    | 0      | 📘 <span style="color: green;">标准</span> |
-| grok-2                 | 100    | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-4o                 | 30     | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-4o-128k            | 125    | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-4o-mini            | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-4-turbo            | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
-| gpt-4-turbo-128k       | 0      | 20     | 🔥 <span style="color: red;">高级</span>   |
-| gpt4                   | 0      | 45     | 🔥 <span style="color: red;">高级</span>   |
-| claude                 | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-5-sonnet      | 100    | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-haiku         | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-opus          | 0      | 45     | 🔥 <span style="color: red;">高级</span>   |
-| claude-3-5-haiku-200k  | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-5-sonnet-200k | 100    | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-sonnet-200k   | 100    | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-haiku-200k    | 20     | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-opus-200k     | 0      | 120    | 🔥 <span style="color: red;">高级</span>   |
-| gemini-1-5-flash       | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-5-pro         | 18     | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-5-flash-128k  | 30     | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-5-pro-128k    | 175    | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-5-flash-1m    | 170    | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-5-pro-1m      | 2500   | 0      | 📘 <span style="color: green;">标准</span> |
-| chatgpt                | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-3-5-turbo          | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| gpt-3-5-turbo-16k      | 12     | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-instant-100k    | 8      | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-2               | 35     | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-2-100k          | 75     | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-2-1-200k        | 300    | 0      | 📘 <span style="color: green;">标准</span> |
-| claude-3-sonnet        | 20     | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini                 | 4      | 0      | 📘 <span style="color: green;">标准</span> |
-| gemini-1-0-pro         | 4      | 0      | 📘 <span style="color: green;">标准</span> |
+| 模型名称               | 消耗标准额度 | 消耗高级额度 | 类型                                       |
+| ---------------------- | ------------ | ------------ | ------------------------------------------ |
+| deepseek-r1            | 1            | 0            | 📘 <span style="color: green;">标准</span> |
+| deepseek-v3            | 1            | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-7-sonnet      | 0            | 20           | 🔥 <span style="color: red;">高级</span>   |
+| claude-3-5-haiku       | 10           | 0            | 📘 <span style="color: green;">标准</span> |
+| openai-o3-mini         | 200          | 0            | 📘 <span style="color: green;">标准</span> |
+| openai-o1              | 0            | 40           | 🔥 <span style="color: red;">高级</span>   |
+| openai-o1-mini         | 200          | 0            | 📘 <span style="color: green;">标准</span> |
+| grok-2                 | 100          | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-4o                 | 30           | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-4o-128k            | 125          | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-4o-mini            | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-4-turbo            | 0            | 20           | 🔥 <span style="color: red;">高级</span>   |
+| gpt-4-turbo-128k       | 0            | 20           | 🔥 <span style="color: red;">高级</span>   |
+| gpt4                   | 0            | 45           | 🔥 <span style="color: red;">高级</span>   |
+| claude                 | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-5-sonnet      | 100          | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-haiku         | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-opus          | 0            | 45           | 🔥 <span style="color: red;">高级</span>   |
+| claude-3-5-haiku-200k  | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-5-sonnet-200k | 100          | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-sonnet-200k   | 100          | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-haiku-200k    | 20           | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-opus-200k     | 0            | 120          | 🔥 <span style="color: red;">高级</span>   |
+| gemini-1-5-flash       | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro         | 18           | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-flash-128k  | 30           | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro-128k    | 175          | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-flash-1m    | 170          | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-5-pro-1m      | 2500         | 0            | 📘 <span style="color: green;">标准</span> |
+| chatgpt                | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-3-5-turbo          | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| gpt-3-5-turbo-16k      | 12           | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-instant-100k    | 8            | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-2               | 35           | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-2-100k          | 75           | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-2-1-200k        | 300          | 0            | 📘 <span style="color: green;">标准</span> |
+| claude-3-sonnet        | 20           | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini                 | 4            | 0            | 📘 <span style="color: green;">标准</span> |
+| gemini-1-0-pro         | 4            | 0            | 📘 <span style="color: green;">标准</span> |
 
 ## 报错排查
 
 > `Forbidden`
->
 
 被各种不可知原因禁止访问,可配置`PROXY_URL`。
 
-(【推荐方案】[自建ipv6代理池绕过cf对ip的速率限制及5s盾](https://linux.do/t/topic/367413)或购买[IProyal](https://iproyal.cn/?r=244330))
+(【推荐方案】[自建 ipv6 代理池绕过 cf 对 ip 的速率限制及 5s 盾](https://linux.do/t/topic/367413)或购买[IProyal](https://iproyal.cn/?r=244330))
 
 > `No valid cookies available`
->
 
-无可用Cookie,可能原因:
+无可用 Cookie,可能原因:
 
-1. 没有配置有效Cookie。
-2. 调用了高级模型,但没有配置高级Cookie。
+1. 没有配置有效 Cookie。
+2. 调用了高级模型,但没有配置高级 Cookie。
 
 ## 其他
 
-[HixAI](https://hix.ai/invitation-landing?invite_code=GE942N)(注册获取50Credit)
-
-
+[HixAI](https://hix.ai/invitation-landing?invite_code=GE942N)(注册获取 50Credit)

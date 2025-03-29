@@ -5,8 +5,8 @@
 package main
 
 import (
+	"embed"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"hixai2api/check"
 	"hixai2api/common"
 	"hixai2api/common/config"
@@ -18,9 +18,12 @@ import (
 	"hixai2api/router"
 	"os"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-//var buildFS embed.FS
+//go:embed web/dist
+var buildFS embed.FS
 
 func main() {
 	logger.SetupLogger()
@@ -50,8 +53,10 @@ func main() {
 	server.Use(middleware.RequestId())
 	middleware.SetUpLogger(server)
 
-	router.SetRouter(server)
-	//router.SetRouter(server, buildFS)
+	// 设置API路由
+	router.SetApiRouter(server)
+	// 设置前端路由
+	router.SetWebRouter(server, buildFS)
 
 	var port = os.Getenv("PORT")
 	if port == "" {
@@ -69,5 +74,4 @@ func main() {
 	if err != nil {
 		logger.FatalLog("failed to start HTTP server: " + err.Error())
 	}
-
 }
