@@ -14,7 +14,7 @@ const (
 	chatEndpoint       = baseURL + "/api/hix/chat"
 	createChatEndpoint = baseURL + "/api/trpc/hixChat.createChat?batch=1"
 	delChatEndpoint    = baseURL + "/api/trpc/hixChat.deleteChat?batch=1"
-	subUsageEndpoint   = baseURL + "/api/trpc/subUsage.getSubUsage?batch=1"
+	subUsageEndpoint   = baseURL + "/api/trpc/hixChat.getUsedBotList,subLog.getSubLog,subUsage.getSubUsage?batch=1"
 	deleteEndpoint     = baseURL + "/api/project/delete?project_id=%s"
 	uploadEndpoint     = baseURL + "/api/get_upload_personal_image_url"
 	chatType           = "COPILOT_MOA_CHAT"
@@ -136,25 +136,25 @@ type SubUsageResponse struct {
 }
 
 func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (bool, int, int, error) {
-	subUsageReqParam := map[string]interface{}{
-		"0": map[string]interface{}{
-			"json": map[string]interface{}{
-				"appName": "HIXChat",
-			},
-		},
-		"1": map[string]interface{}{
-			"json": map[string]interface{}{
-				"appName": "HIXChat",
-			},
-		},
-	}
-	bytes, err := json.Marshal(subUsageReqParam)
-	if err != nil {
-		return false, 0, 0, err
-	}
+	//subUsageReqParam := map[string]interface{}{
+	//	"0": map[string]interface{}{
+	//		"json": map[string]interface{}{
+	//			"appName": "HIXChat",
+	//		},
+	//	},
+	//	"1": map[string]interface{}{
+	//		"json": map[string]interface{}{
+	//			"appName": "HIXChat",
+	//		},
+	//	},
+	//}
+	//bytes, err := json.Marshal(subUsageReqParam)
+	//if err != nil {
+	//	return false, 0, 0, err
+	//}
 	accept := "application/json"
 
-	response, err := client.Do(fmt.Sprintf(subUsageEndpoint+"&input=%s", string(bytes)), cycletls.Options{
+	response, err := client.Do(fmt.Sprintf(subUsageEndpoint+"&input=%s", "%7B%220%22%3A%7B%22json%22%3A%7B%22limit%22%3A1000%7D%7D%2C%221%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%7D%7D%2C%222%22%3A%7B%22json%22%3A%7B%22appName%22%3A%22HIXChat%22%7D%7D%2C%223%22%3A%7B%22json%22%3A%7B%22appName%22%3A%22HIXChat%22%7D%7D%2C%224%22%3A%7B%22json%22%3A%7B%22appName%22%3A%22HIXChat%22%7D%7D%2C%225%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%7D%7D%7D"), cycletls.Options{
 		Timeout: 10 * 60 * 60,
 		Proxy:   config.ProxyUrl, // 在每个请求中设置代理
 		Method:  "GET",
@@ -180,18 +180,19 @@ func MakeSubUsageRequest(client cycletls.CycleTLS, cookie string) (bool, int, in
 
 	// 检查数组是否非空并提取ID
 	if len(responses) > 0 {
-		if len(responses[0].Result.Data.JSON.UsageList) > 0 {
-			totalCount := responses[0].Result.Data.JSON.UsageList[0].TotalCount
-			useCount := responses[0].Result.Data.JSON.UsageList[0].UseCount
+		idx := len(responses) - 1
+		if len(responses[idx].Result.Data.JSON.UsageList) > 0 {
+			totalCount := responses[idx].Result.Data.JSON.UsageList[0].TotalCount
+			useCount := responses[idx].Result.Data.JSON.UsageList[0].UseCount
 			standardCredit := totalCount - useCount
 			advancedCredit := 0
-			if responses[0].Result.Data.JSON.IsActiveSub {
+			if responses[idx].Result.Data.JSON.IsActiveSub {
 				// 订阅用户
-				totalCount := responses[0].Result.Data.JSON.UsageList[1].TotalCount
-				useCount := responses[0].Result.Data.JSON.UsageList[1].UseCount
+				totalCount := responses[idx].Result.Data.JSON.UsageList[1].TotalCount
+				useCount := responses[idx].Result.Data.JSON.UsageList[1].UseCount
 				advancedCredit = totalCount - useCount
 			}
-			return responses[0].Result.Data.JSON.IsActiveSub, standardCredit, advancedCredit, nil
+			return responses[idx].Result.Data.JSON.IsActiveSub, standardCredit, advancedCredit, nil
 		} else {
 			return false, 0, 0, fmt.Errorf("MakeSubUsageRequest err ResqBody: %s Cookie: %s", string(bodyBytes), cookie)
 		}
